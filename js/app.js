@@ -34,6 +34,9 @@ function buildSidebar() {
   const nav = document.getElementById('sidebar-nav');
   if (!nav) return;
 
+  // Clear existing content to prevent duplicates
+  nav.innerHTML = '';
+
   CURRICULUM.forEach(phase => {
     const group = document.createElement('div');
     group.className = 'phase-group';
