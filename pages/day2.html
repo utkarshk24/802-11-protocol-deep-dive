@@ -1,0 +1,305 @@
+<!-- ============================================================
+     Day 2: Frequency, Modulation & Data Rates
+     Fragment loaded into index.html by app.js
+     ============================================================ -->
+<div class="day-content">
+
+  <!-- Hero -->
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 02</span>
+      <span class="phase-badge" style="background:rgba(88,166,255,0.15); color:#58a6ff; border:1px solid rgba(88,166,255,0.3);">
+        Phase 1 · Radio Fundamentals
+      </span>
+    </div>
+    <h1>Frequency, Modulation<br>& Data Rates</h1>
+    <p>
+      Yesterday you learned why frequency matters. Today we go deeper: how modulation converts
+      digital data into radio waves, why different modulations have different speeds and ranges,
+      how OFDM multiplies data rates, and how to calculate exact transmission speeds from a
+      Wireshark capture.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~65 min</span></span></div>
+      <div class="hero-stat"><span>📊</span><span>Modulation schemes</span></div>
+      <div class="hero-stat"><span>⚡</span><span>OFDM & subcarriers</span></div>
+      <div class="hero-stat"><span>🧮</span><span>Data rate calculations</span></div>
+    </div>
+  </div>
+
+  <!-- The Why -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤔</span>
+      <h2>The 'Why' — From Frequency to Speed</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>Frequency Gives You Bandwidth. Modulation Gives You Speed.</h3>
+      <p>
+        A 20 MHz 2.4 GHz channel has a fixed bandwidth. You can't make it wider. But you CAN
+        change how much data you squeeze into that bandwidth by using smarter modulation.
+      </p>
+      <p>
+        BPSK: 1 bit per symbol → 6 Mbps on a 20 MHz channel  
+        QPSK: 2 bits per symbol → 12 Mbps on the same channel  
+        16-QAM: 4 bits per symbol → 24 Mbps  
+        64-QAM: 6 bits per symbol → 36 Mbps  
+      </p>
+      <p>
+        Same frequency. Same channel width. Different modulation = different speed. But there's a tradeoff:
+        higher modulation requires cleaner signal. At -85 dBm, 64-QAM fails. You fall back to BPSK.
+      </p>
+
+      <div class="callout">
+        <strong>Modulation is the engineer's speed vs. range dial.</strong><br>
+        Want maximum range? Use BPSK. Want maximum speed? Use 64-QAM. OFDM (802.11a/g/n/ac/ax) uses
+        both simultaneously: subcarriers near the AP use 64-QAM, farther clients use BPSK. You get
+        high average throughput across the whole network.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modulation Deep Dive -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📡</span>
+      <h2>Modulation Schemes: From BPSK to 1024-QAM</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>How Modulation Works</h3>
+      <p>
+        Radio waves are sinusoids. Modulation changes three properties:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 2;">
+        <li><strong>Amplitude:</strong> How loud the wave is (rarely used in 802.11; too vulnerable to interference)</li>
+        <li><strong>Frequency:</strong> How fast it oscillates (rarely used alone; OFDM uses many subcarriers)</li>
+        <li><strong>Phase:</strong> Where in the cycle it starts (this is the key for 802.11)</li>
+      </ul>
+
+      <h3>Phase Shift Keying (PSK): The 802.11 Workhorse</h3>
+      <p>
+        PSK modulation encodes data in the phase of the carrier wave. Different phase angles represent
+        different bit patterns.
+      </p>
+
+      <table class="req-table" style="margin: 16px 0;">
+        <thead>
+          <tr><th>Modulation</th><th>Phase States</th><th>Bits/Symbol</th><th>Min RSSI</th><th>Use Case</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>BPSK</strong></td><td>2 (0°, 180°)</td><td>1</td><td>-82 dBm</td><td>Longest range, slowest</td></tr>
+          <tr><td><strong>QPSK</strong></td><td>4 (0°, 90°, 180°, 270°)</td><td>2</td><td>-79 dBm</td><td>Balanced</td></tr>
+          <tr><td><strong>16-QAM</strong></td><td>16 states</td><td>4</td><td>-74 dBm</td><td>Good signal needed</td></tr>
+          <tr><td><strong>64-QAM</strong></td><td>64 states</td><td>6</td><td>-65 dBm</td><td>Excellent signal only</td></tr>
+          <tr><td><strong>256-QAM</strong></td><td>256 states</td><td>8</td><td>-55 dBm</td><td>Very close range</td></tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>Why the tradeoff?</strong> When you have 64 different phase angles, they're spaced
+        only 5.6° apart. Noise or interference can cause the receiver to misinterpret a signal and
+        read the wrong phase → bit error. BPSK has only 180° separation, so it's very robust.
+      </p>
+
+      <h3>Constellation Diagrams</h3>
+      <p>
+        A constellation diagram plots each possible state as a point on a 2D plane (I/Q plane).
+        The closer points are, the more vulnerable to noise.
+      </p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px; text-align:center;">
+BPSK (2 points):        QPSK (4 points):      16-QAM (16 points):
+      •                      •                    • • • •
+                             • • •                • • • •
+      •                      • • •                • • • •
+                              •                   • • • •
+
+Far apart = robust         Closer = fragile       Very close = needs clean signal
+      </pre>
+
+    </div>
+  </div>
+
+  <!-- OFDM Revolution -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">⚡</span>
+      <h2>OFDM: The 802.11a/g Breakthrough</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>Single Carrier Problem</h3>
+      <p>
+        802.11b uses a single carrier modulated with BPSK/QPSK. It's simple but slow: max 11 Mbps.
+        The problem: if you try to send data faster, the signal becomes more fragile in multipath
+        environments (reflections from walls, furniture).
+      </p>
+
+      <h3>OFDM Solution: Parallel Subcarriers</h3>
+      <p>
+        <strong>OFDM (Orthogonal Frequency Division Multiplexing)</strong> splits the channel into
+        many narrowband subcarriers, each sending a piece of the data in parallel.
+      </p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:13px;">
+802.11b (single carrier):
+  20 MHz channel → 1 carrier → 11 Mbps max
+
+802.11a/g (OFDM):
+  20 MHz channel → 52 subcarriers (48 data + 4 pilot) → 54 Mbps max
+
+802.11n (wider OFDM):
+  40 MHz channel → 108 subcarriers → 150 Mbps (plus spatial streams)
+
+802.11ac (wide + more spatial streams):
+  80 MHz channel → 234 subcarriers → 433 Mbps (1x spatial stream)
+  80 MHz channel → 234 subcarriers → 866 Mbps (2x spatial streams)
+      </pre>
+
+      <h3>Why Subcarriers Work</h3>
+      <p>
+        By splitting the signal into many narrowband pieces, OFDM makes each subcarrier robust
+        to multipath (reflections don't hurt narrow signals as much). You can use higher modulation
+        (64-QAM, 256-QAM) on each subcarrier without the fragility.
+      </p>
+
+      <h3>Subcarrier Spacing: 312.5 kHz (802.11a/g/n/ac/ax)</h3>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:13px;">
+20 MHz channel:
+  Bandwidth ÷ subcarrier spacing = number of subcarriers
+  20,000 kHz ÷ 312.5 kHz = 64 subcarriers
+  (52 data + 4 pilot + 8 null/guard band)
+
+40 MHz channel:
+  40,000 kHz ÷ 312.5 kHz = 128 subcarriers
+
+80 MHz channel:
+  80,000 kHz ÷ 312.5 kHz = 256 subcarriers
+
+160 MHz channel:
+  160,000 kHz ÷ 312.5 kHz = 512 subcarriers
+      </pre>
+
+    </div>
+  </div>
+
+  <!-- Data Rate Calculations -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🧮</span>
+      <h2>Calculating Data Rates from MCS & Channel Width</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>MCS: Modulation & Coding Scheme</h3>
+      <p>
+        MCS (0–11 for 802.11a/g/n) encodes both modulation and coding rate:
+      </p>
+      <table class="req-table" style="margin: 16px 0;">
+        <thead>
+          <tr><th>MCS</th><th>Modulation</th><th>Coding Rate</th><th>Bits/Symbol</th><th>20 MHz</th><th>40 MHz</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>BPSK</td><td>1/2</td><td>0.5</td><td>6 Mbps</td><td>13.5 Mbps</td></tr>
+          <tr><td>1</td><td>QPSK</td><td>1/2</td><td>1</td><td>12 Mbps</td><td>27 Mbps</td></tr>
+          <tr><td>2</td><td>QPSK</td><td>3/4</td><td>1.5</td><td>18 Mbps</td><td>40.5 Mbps</td></tr>
+          <tr><td>3</td><td>16-QAM</td><td>1/2</td><td>2</td><td>24 Mbps</td><td>54 Mbps</td></tr>
+          <tr><td>4</td><td>16-QAM</td><td>3/4</td><td>3</td><td>36 Mbps</td><td>81 Mbps</td></tr>
+          <tr><td>5</td><td>64-QAM</td><td>2/3</td><td>4</td><td>48 Mbps</td><td>108 Mbps</td></tr>
+          <tr><td>6</td><td>64-QAM</td><td>3/4</td><td>4.5</td><td>54 Mbps</td><td>121.5 Mbps</td></tr>
+          <tr><td>7</td><td>64-QAM</td><td>5/6</td><td>5</td><td>60 Mbps (802.11g)</td><td>135 Mbps</td></tr>
+        </tbody>
+      </table>
+
+      <h3>The Formula</h3>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:13px;">
+Data Rate = (bits per symbol) × (number of subcarriers) × (symbol rate)
+
+For 802.11a/g/n:
+  Symbol rate = 250,000 symbols/sec (fixed)
+
+Example: 20 MHz, MCS 5 (64-QAM, 2/3 rate):
+  Bits per symbol = 4
+  Subcarriers = 52 (data only, not pilot)
+  Data Rate = 4 × 52 × 250,000 / 1,000,000 = 48 Mbps
+
+Example: 40 MHz, MCS 5:
+  Subcarriers = 108
+  Data Rate = 4 × 108 × 250,000 / 1,000,000 = 108 Mbps
+      </pre>
+
+      <h3>Coding Rate: Why 1/2, 3/4, 5/6?</h3>
+      <p>
+        <strong>Coding rate</strong> is a ratio of useful data to total transmitted bits.
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>1/2 rate:</strong> 1 useful bit per 2 transmitted bits. Half is error-correction overhead. Very robust.</li>
+        <li><strong>3/4 rate:</strong> 3 useful bits per 4 transmitted bits. Less overhead, less robust than 1/2.</li>
+        <li><strong>5/6 rate:</strong> 5 useful bits per 6 transmitted bits. Minimal overhead, fragile in noise.</li>
+      </ul>
+      <p>
+        The FEC (Forward Error Correction) algorithm uses extra bits to reconstruct corrupted data.
+        Lower coding rates = more redundancy = more robust in bad signal.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- Expected Output -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🖥</span>
+      <h2>Reading Data Rates from Wireshark</h2>
+    </div>
+    <div class="section-card-body">
+
+      <p>In Wireshark, when you select a frame, look for the "Data Rate" field in the 802.11 PHY dissection:</p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px;">
+Frame 42: 1234 bytes on wire (9872 bits)
+...
+Radiotap Header v0
+  Data Rate: 54 Mbps           ← MCS 6 (64-QAM, 3/4 rate) on 20 MHz
+  Channel Frequency: 2437 MHz   ← Channel 6 (2.4 GHz)
+  Antenna Signal: -45 dBm       ← Strong signal
+
+802.11 MAC Header
+  Frame Control: 0x0841
+  Flags: ToDS
+  Duration/ID: 0 (QoS)
+  Receiver Address: aa:bb:cc:dd:ee:01
+  Transmitter Address: aa:bb:cc:dd:ee:02
+      </pre>
+
+      <p>
+        <strong>What this tells you:</strong> The frame was sent at 54 Mbps (MCS 6) with excellent
+        signal (-45 dBm). This is near the AP. If the same device was 100 meters away, you'd see
+        a lower data rate like 12 Mbps (MCS 1) because signal would be weaker.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- What's Next -->
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#58a6ff; margin-bottom:4px;">
+            Up Next · Day 3
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            PLCP Headers & Physical Layer Frames
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Now that you understand modulation, we'll decode the actual PLCP (Physical Layer Convergence
+            Procedure) header that precedes every frame. You'll learn the exact bit layout of the preamble,
+            SIGNAL field, and how receivers synchronize to frames.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .day-content -->
