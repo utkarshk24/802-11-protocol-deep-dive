@@ -124,7 +124,7 @@
         </h1>
         <p style="color: #8b949e; font-size: 12px; margin: 4px 0 0 0;">DEEP DIVE</p>
       </div>
-      <div style="padding: 20px; color: #8b949e; text-align: center; font-size: 14px;">
+      <div id="sidebar-intro" style="padding: 20px; color: #8b949e; text-align: center; font-size: 14px; display: none;">
         <p style="margin-bottom: 20px;">Welcome to the most comprehensive 802.11 protocol course.</p>
         <p style="margin-bottom: 20px;">45 days of deep, in-depth knowledge covering radio fundamentals through WPA3 security.</p>
         <a href="?day=1" style="display: inline-block; padding: 8px 16px; background: #58a6ff; color: white; text-decoration: none; border-radius: 4px; font-weight: 600;">Start Day 1</a>
@@ -208,8 +208,13 @@
   <script src="js/app.js"></script>
   <script src="js/curriculum.js"></script>
   <script>
-    // On landing page, don't load day content yet
-    if (new URLSearchParams(window.location.search).has('day')) {
+    // Show/hide sidebar intro based on whether viewing a day
+    const params = new URLSearchParams(window.location.search);
+    const sidebarIntro = document.getElementById('sidebar-intro');
+
+    if (params.has('day')) {
+      // Viewing a day: hide intro, load day content
+      if (sidebarIntro) sidebarIntro.style.display = 'none';
       buildSidebar();
       initMobileSidebar();
       updateProgress();
@@ -217,6 +222,8 @@
       loadDay(day);
       window.addEventListener('popstate', () => loadDay(getQueryDay()));
     } else {
+      // Landing page: show intro
+      if (sidebarIntro) sidebarIntro.style.display = 'block';
       buildSidebar();
       initMobileSidebar();
       updateProgress();
