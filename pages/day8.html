@@ -1,0 +1,170 @@
+<!-- Day 8: Phase 1 Capstone: Raw PCAP Analysis -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 08</span>
+      <span class="phase-badge" style="background:rgba(88,166,255,0.15); color:#58a6ff; border:1px solid rgba(88,166,255,0.3);">
+        Phase 1 · Radio Fundamentals
+      </span>
+    </div>
+    <h1>Phase 1 Capstone:<br>Raw PCAP Analysis</h1>
+    <p>
+      You've learned radio fundamentals, modulation, PLCP headers, MAC frame anatomy, Wireshark,
+      Scapy, and CRC validation. Now assemble it all: build a complete PCAP analyzer that decodes
+      frames, extracts statistics, and generates a report on a real-world Wi-Fi capture.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~120 min</span></div>
+      <div class="hero-stat"><span>🏗️</span><span>Full analyzer</span></div>
+      <div class="hero-stat"><span>📊</span><span>Statistics</span></div>
+      <div class="hero-stat"><span>🎓</span><span>Phase 1 complete</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🏗️</span>
+      <h2>Capstone Project: PCAP Analyzer</h2>
+    </div>
+    <div class="section-card-body">
+      <h3>Requirements</h3>
+      <p>Build a Python tool that reads a PCAP file and generates a report with:</p>
+      <ul style="margin: 12px 0 0 20px; line-height: 2;">
+        <li><strong>Frame counts:</strong> Total frames, management, control, data</li>
+        <li><strong>Channel analysis:</strong> Channels used, frequencies</li>
+        <li><strong>RSSI histogram:</strong> Distribution of signal strengths</li>
+        <li><strong>Data rates:</strong> Which MCS rates were used</li>
+        <li><strong>BSSIDs found:</strong> List of APs and beacon count per AP</li>
+        <li><strong>Device tracking:</strong> Devices and their connection attempts</li>
+        <li><strong>Anomalies:</strong> Deauths, disassocs, failed auths, corrupted frames</li>
+      </ul>
+
+      <h3>Sample Output</h3>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px; overflow-x:auto;">
+=== PCAP Analysis Report ===
+File: capture.pcap (12.5 MB, 125,432 frames)
+
+Frame Summary:
+  Management: 15,234 (12%)
+  Control: 45,123 (36%)
+  Data: 65,075 (52%)
+
+Channels:
+  2.4 GHz: Channels 1, 6, 11 (3,234 beacons)
+  5 GHz: Channels 36–165 (8,456 beacons)
+
+Signal Strength Distribution:
+  > -50 dBm: 34,234 frames (27%)
+  -50 to -70 dBm: 56,123 frames (45%)
+  < -70 dBm: 35,075 frames (28%)
+
+Data Rates Used:
+  6 Mbps: 1,234 frames (1%)
+  24 Mbps: 4,567 frames (4%)
+  54 Mbps: 23,456 frames (19%)
+
+BSSIDs Found:
+  aa:bb:cc:01:02:03 (AP-01): 5,234 beacons
+  aa:bb:cc:01:02:04 (AP-02): 3,456 beacons
+
+Anomalies:
+  Deauthentications: 45
+  Disassociations: 12
+  Failed authentications: 8
+  Corrupted frames (FCS bad): 123
+      </pre>
+
+      <h3>Starter Code</h3>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">pcap_analyzer.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">#!/usr/bin/env python3
+from scapy.all import rdpcap, Dot11
+from collections import defaultdict, Counter
+import sys
+
+def analyze_pcap(pcap_file):
+    """Analyze PCAP file and generate report."""
+    
+    packets = rdpcap(pcap_file)
+    
+    # Initialize counters
+    frame_types = Counter()
+    channels = Counter()
+    rssi_values = []
+    data_rates = Counter()
+    bssids = defaultdict(int)
+    
+    deauths = 0
+    disassocs = 0
+    
+    for pkt in packets:
+        if not pkt.haslayer(Dot11):
+            continue
+        
+        frame = pkt[Dot11]
+        
+        # Count frame types
+        frame_type_map = {0: 'Management', 1: 'Control', 2: 'Data'}
+        frame_types[frame_type_map[frame.type]] += 1
+        
+        # TODO: Extract channels
+        # TODO: Extract RSSI
+        # TODO: Extract data rates
+        # TODO: Count BSSIDs
+        # TODO: Count anomalies
+    
+    # Generate report
+    print("=== PCAP Analysis Report ===")
+    print(f"File: {pcap_file} ({len(packets)} frames)")
+    print()
+    print("Frame Summary:")
+    for ftype, count in frame_types.most_common():
+        pct = count / len(packets) * 100
+        print(f"  {ftype}: {count} ({pct:.1f}%)")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python pcap_analyzer.py <pcap_file>")
+        sys.exit(1)
+    
+    analyze_pcap(sys.argv[1])
+      </code></pre>
+      </div>
+
+      <h3>Your Challenge</h3>
+      <p>
+        Complete the <code>pcap_analyzer.py</code> script:
+      </p>
+      <ol style="margin: 12px 0 0 20px; line-height: 2;">
+        <li>Extract channels from Radiotap headers</li>
+        <li>Extract RSSI (dBm_AntSignal) and build histogram</li>
+        <li>Extract data rates and count usage</li>
+        <li>Track BSSIDs and beacon count</li>
+        <li>Count deauth, disassoc, auth failures</li>
+        <li>Generate a professional report</li>
+      </ol>
+
+      <p style="margin-top:20px; color:#8b949e;">
+        <strong>Hint:</strong> Use Counter from collections to aggregate statistics efficiently.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:16px;">🎓</div>
+      <div style="font-size:20px; font-weight:700; color:#e6edf3; margin-bottom:12px;">
+        Phase 1 Complete
+      </div>
+      <div style="font-size:14px; color:#8b949e; line-height:1.8;">
+        You've mastered radio fundamentals, modulation, PLCP headers, MAC frames, and PCAP analysis.
+        <br/><br/>
+        Next: Phase 2 dives into management frames — beacons, probes, auth, association, roaming.
+      </div>
+    </div>
+  </div>
+</div>

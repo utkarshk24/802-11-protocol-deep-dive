@@ -1,0 +1,268 @@
+<!-- ============================================================
+     Day 6: Building Frame Parsers in Scapy
+     Fragment loaded into index.html by app.js
+     ============================================================ -->
+<div class="day-content">
+
+  <!-- Hero -->
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 06</span>
+      <span class="phase-badge" style="background:rgba(88,166,255,0.15); color:#58a6ff; border:1px solid rgba(88,166,255,0.3);">
+        Phase 1 · Radio Fundamentals
+      </span>
+    </div>
+    <h1>Building Frame Parsers<br>in Scapy</h1>
+    <p>
+      Wireshark is manual. Scapy is automated. Today we write Python code to parse 802.11 frames
+      programmatically: extract Frame Control bits, decode MAC addresses, filter by frame type,
+      and build tools that analyze entire PCAPs in seconds.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~85 min</span></div>
+      <div class="hero-stat"><span>🐍</span><span>Python + Scapy</span></div>
+      <div class="hero-stat"><span>📦</span><span>Frame parsing</span></div>
+      <div class="hero-stat"><span>🔬</span><span>Automation tools</span></div>
+    </div>
+  </div>
+
+  <!-- The Why -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤔</span>
+      <h2>The 'Why' — Automation Scales</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>Wireshark Doesn't Scale</h3>
+      <p>
+        You have a 1 GB PCAP file with 10 million frames. You need to find all deauth frames,
+        count them by AP, and alert if any AP sent >100 deauths. Clicking through Wireshark
+        would take weeks.
+      </p>
+      <p>
+        Scapy solves this in 10 lines of Python. Parse, filter, aggregate, report. In seconds.
+      </p>
+
+      <div class="callout">
+        <strong>Scapy turns PCAP analysis into automation.</strong><br>
+        Parse frames, extract fields, build statistics, detect anomalies programmatically.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scapy Basics -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">💻</span>
+      <h2>Scapy: Reading and Parsing 802.11</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>Installation</h3>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:13px;">
+pip install scapy
+      </pre>
+
+      <h3>Reading a PCAP File</h3>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">parse_frames.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, Dot11
+
+# Read PCAP file
+packets = rdpcap("capture.pcap")
+
+# Iterate through frames
+for pkt in packets:
+    # Check if 802.11 frame
+    if pkt.haslayer(Dot11):
+        frame = pkt[Dot11]
+        
+        # Access Frame Control fields
+        print(f"Frame Type: {frame.type}, Subtype: {frame.subtype}")
+        print(f"From DS: {frame.fromds}, To DS: {frame.tods}")
+        print(f"Protected: {frame.protected}")
+        
+        # Access MAC addresses
+        print(f"RA: {frame.addr1} (Receiver)")
+        print(f"TA: {frame.addr2} (Transmitter)")
+        print(f"BSSID: {frame.addr3} (BSSID)")
+        if frame.addr4:
+            print(f"SA: {frame.addr4} (Source)")
+        print()
+      </code></pre>
+      </div>
+
+      <h3>Frame Type & Subtype Constants</h3>
+      <table class="req-table" style="margin: 16px 0;">
+        <thead>
+          <tr><th>Frame Type</th><th>Code</th><th>Scapy Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Management</td><td>00</td><td>0</td></tr>
+          <tr><td>Control</td><td>01</td><td>1</td></tr>
+          <tr><td>Data</td><td>10</td><td>2</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Filtering Frames by Type</h3>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">parse_frames.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python"># Filter only management frames (type 0)
+mgmt_frames = [pkt for pkt in packets if pkt.haslayer(Dot11) and pkt[Dot11].type == 0]
+
+# Filter only beacons (subtype 8)
+beacons = [pkt for pkt in mgmt_frames if pkt[Dot11].subtype == 8]
+
+# Filter deauth frames (subtype 12)
+deauths = [pkt for pkt in mgmt_frames if pkt[Dot11].subtype == 12]
+
+# Count deauths by AP (BSSID)
+from collections import defaultdict
+deauth_by_ap = defaultdict(int)
+for pkt in deauths:
+    bssid = pkt[Dot11].addr3
+    deauth_by_ap[bssid] += 1
+
+# Alert if any AP sent >100 deauths
+for bssid, count in deauth_by_ap.items():
+    if count > 100:
+        print(f"ALERT: AP {bssid} sent {count} deauths!")
+      </code></pre>
+      </div>
+
+      <h3>Extracting Radiotap Information</h3>
+      <p>
+        If the PCAP was captured with Radiotap headers (most tools do), you can extract PHY info:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">parse_frames.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.layers.dot11 import Dot11Elt
+from scapy.contrib.radiotap import Radiotap
+
+for pkt in packets:
+    if pkt.haslayer(Radiotap):
+        radiotap = pkt[Radiotap]
+        
+        # Extract PHY layer info
+        if hasattr(radiotap, 'dBm_AntSignal'):
+            rssi = radiotap.dBm_AntSignal
+            print(f"RSSI: {rssi} dBm")
+        
+        if hasattr(radiotap, 'Rate'):
+            rate_mbps = radiotap.Rate / 2  # Scapy stores as 500 kbps units
+            print(f"Data Rate: {rate_mbps} Mbps")
+      </code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Real Example -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔬</span>
+      <h2>Real Example: Finding Failed Associations</h2>
+    </div>
+    <div class="section-card-body">
+
+      <p><strong>Goal:</strong> Find all association failures and their reasons.</p>
+
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">find_assoc_failures.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, Dot11
+from collections import defaultdict
+
+packets = rdpcap("capture.pcap")
+
+# Assoc response status codes
+STATUS_CODES = {
+    0: "Success",
+    1: "Unspecified failure",
+    10: "Cannot support all requested capabilities",
+    11: "Reassociation no association",
+    13: "Not authenticated",
+    14: "Unknown authentication algorithm",
+    15: "Unknown sequence number",
+    16: "Challenge failure",
+    17: "Timeout",
+    25: "Invalid information element",
+    27: "Invalid group cipher",
+    28: "Invalid pairwise cipher",
+}
+
+failures = defaultdict(list)
+
+for pkt in packets:
+    if not pkt.haslayer(Dot11):
+        continue
+    
+    frame = pkt[Dot11]
+    
+    # Look for assoc response (subtype 1)
+    if frame.type == 0 and frame.subtype == 1:
+        # Extract status code (2 bytes after frame control)
+        # Scapy parses this as 'status'
+        if hasattr(frame, 'status'):
+            status_code = frame.status
+            
+            if status_code != 0:  # Not success
+                bssid = frame.addr3
+                reason = STATUS_CODES.get(status_code, f"Unknown ({status_code})")
+                failures[reason].append({
+                    'frame': pkt,
+                    'bssid': bssid,
+                    'status': status_code
+                })
+
+# Report failures
+print("Association Failures:")
+for reason, cases in failures.items():
+    print(f"\n{reason} ({len(cases)} cases):")
+    for case in cases[:5]:  # Show first 5
+        print(f"  BSSID: {case['bssid']}")
+      </code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- What's Next -->
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#58a6ff; margin-bottom:4px;">
+            Up Next · Day 7
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            CRC Validation & Frame Integrity
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Every 802.11 frame ends with a 4-byte CRC (Cyclic Redundancy Check). Tomorrow we decode
+            how CRC works, why it's critical, and how to validate frame integrity using Python.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .day-content -->

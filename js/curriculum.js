@@ -13,11 +13,11 @@ const CURRICULUM = [
       { day: 1,  title: "Radio Fundamentals & Why Protocol Matters",   file: "pages/day1.html",  status: "available" },
       { day: 2,  title: "Frequency, Modulation & Data Rates",          file: "pages/day2.html",  status: "available" },
       { day: 3,  title: "PLCP Headers & Physical Layer Frames",        file: "pages/day3.html",  status: "available" },
-      { day: 4,  title: "MAC Frame Anatomy: Frame Control & Addresses", file: "pages/day4.html",  status: "coming-soon" },
-      { day: 5,  title: "Decoding Frames in Wireshark",                file: "pages/day5.html",  status: "coming-soon" },
-      { day: 6,  title: "Building Frame Parsers in Scapy",             file: "pages/day6.html",  status: "coming-soon" },
-      { day: 7,  title: "CRC Validation & Frame Integrity",            file: "pages/day7.html",  status: "coming-soon" },
-      { day: 8,  title: "Phase 1 Capstone: Raw PCAP Analysis",         file: "pages/day8.html",  status: "coming-soon", capstone: true },
+      { day: 4,  title: "MAC Frame Anatomy: Frame Control & Addresses", file: "pages/day4.html",  status: "available" },
+      { day: 5,  title: "Decoding Frames in Wireshark",                file: "pages/day5.html",  status: "available" },
+      { day: 6,  title: "Building Frame Parsers in Scapy",             file: "pages/day6.html",  status: "available" },
+      { day: 7,  title: "CRC Validation & Frame Integrity",            file: "pages/day7.html",  status: "available" },
+      { day: 8,  title: "Phase 1 Capstone: Raw PCAP Analysis",         file: "pages/day8.html",  status: "available", capstone: true },
     ]
   },
   {

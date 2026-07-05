@@ -1,0 +1,249 @@
+<!-- ============================================================
+     Day 4: MAC Frame Anatomy: Frame Control & Addresses
+     Fragment loaded into index.html by app.js
+     ============================================================ -->
+<div class="day-content">
+
+  <!-- Hero -->
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 04</span>
+      <span class="phase-badge" style="background:rgba(88,166,255,0.15); color:#58a6ff; border:1px solid rgba(88,166,255,0.3);">
+        Phase 1 · Radio Fundamentals
+      </span>
+    </div>
+    <h1>MAC Frame Anatomy:<br>Frame Control & Addresses</h1>
+    <p>
+      Every 802.11 frame starts with a Frame Control field — a 2-byte header that tells you
+      everything: is this a beacon? A data frame? Management? Is it encrypted? Aggregated?
+      Today we decode this header bit-by-bit and understand MAC addressing: source, destination,
+      BSSID, transmitter, receiver.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~75 min</span></div>
+      <div class="hero-stat"><span>🔍</span><span>Frame Control field</span></div>
+      <div class="hero-stat"><span>🏷️</span><span>MAC addressing</span></div>
+      <div class="hero-stat"><span>📋</span><span>Frame types & subtypes</span></div>
+    </div>
+  </div>
+
+  <!-- The Why -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤔</span>
+      <h2>The 'Why' — Understanding Frame Type at a Glance</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>One Field Tells You Everything</h3>
+      <p>
+        In Wireshark, you see thousands of frames. How do you instantly know which are beacons,
+        which are data, which are management? The Frame Control field.
+      </p>
+      <p>
+        Without this knowledge, you see a cryptic hex dump. With it, you can read the frame type,
+        flags, and addressing mode instantly. You'll know if a frame is encrypted (Protected Frame flag),
+        aggregated (A-MSDU), or part of a QoS stream.
+      </p>
+
+      <div class="callout">
+        <strong>Frame Control is the Rosetta Stone of 802.11 protocol debugging.</strong><br>
+        One 2-byte field tells you frame type, direction, security, QoS, aggregation, and more.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Frame Control Field -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔍</span>
+      <h2>Frame Control Field: 16 Bits of Information</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>Bit-by-Bit Breakdown</h3>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:11px; overflow-x:auto;">
+Frame Control Field (2 bytes = 16 bits):
+
+Bit 0–1:     Protocol Version (2 bits) = 00 (802.11 version 0)
+Bit 2–3:     Type (2 bits)              = 00=Mgmt, 01=Control, 10=Data, 11=Ext
+Bit 4–7:     Subtype (4 bits)           = Frame subtype within type
+Bit 8:       To DS (1 bit)              = 1 if destined for DS (AP→Client path)
+Bit 9:       From DS (1 bit)            = 1 if from DS (AP→Client)
+Bit 10:      More Frag (1 bit)          = 1 if more fragments coming
+Bit 11:      Retry (1 bit)              = 1 if retransmission
+Bit 12:      Power Mgmt (1 bit)         = 1 if sender in power-save mode
+Bit 13:      More Data (1 bit)          = 1 if more data buffered for receiver
+Bit 14:      Protected Frame (1 bit)    = 1 if encrypted (WPA2/WPA3)
+Bit 15:      Order (1 bit)              = 1 if HT Order or QoS+A-MPDU or HE Order
+      </pre>
+
+      <h3>Frame Type & Subtype</h3>
+      <table class="req-table" style="margin: 16px 0;">
+        <thead>
+          <tr><th>Type (2 bits)</th><th>Subtype (4 bits)</th><th>Frame Name</th><th>Hex Subtype</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="8"><strong>00 = Management</strong></td><td>0000</td><td>Association Request</td><td>0x00</td></tr>
+          <tr><td>0001</td><td>Association Response</td><td>0x10</td></tr>
+          <tr><td>0100</td><td>Probe Request</td><td>0x40</td></tr>
+          <tr><td>0101</td><td>Probe Response</td><td>0x50</td></tr>
+          <tr><td>1000</td><td>Beacon</td><td>0x80</td></tr>
+          <tr><td>1010</td><td>Disassociation</td><td>0xA0</td></tr>
+          <tr><td>1011</td><td>Authentication</td><td>0xB0</td></tr>
+          <tr><td>1100</td><td>Deauthentication</td><td>0xC0</td></tr>
+          <tr><td rowspan="4"><strong>01 = Control</strong></td><td>1010</td><td>RTS (Request to Send)</td><td>0xB4</td></tr>
+          <tr><td>1011</td><td>CTS (Clear to Send)</td><td>0xC4</td></tr>
+          <tr><td>1100</td><td>ACK (Acknowledgement)</td><td>0xD4</td></tr>
+          <tr><td>1110</td><td>Block Ack</td><td>0xF4</td></tr>
+          <tr><td rowspan="4"><strong>10 = Data</strong></td><td>0000</td><td>Data</td><td>0x08</td></tr>
+          <tr><td>0001</td><td>Data + CF-Ack</td><td>0x18</td></tr>
+          <tr><td>1000</td><td>QoS Data</td><td>0x88</td></tr>
+          <tr><td>1001</td><td>QoS Data + CF-Ack</td><td>0x98</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Flags Explained</h3>
+      <ul style="margin: 12px 0 0 20px; line-height: 2;">
+        <li><strong>To DS / From DS:</strong> Indicates AP direction. To DS = client→AP. From DS = AP→client.</li>
+        <li><strong>More Frag:</strong> If 1, more fragments follow (receiver must wait for all before reassembly).</li>
+        <li><strong>Retry:</strong> If 1, this is a retransmission (same sequence number as before).</li>
+        <li><strong>Power Mgmt:</strong> If 1, sender is in power-save sleep (AP should buffer packets for it).</li>
+        <li><strong>More Data:</strong> If 1, AP has more packets buffered for this client.</li>
+        <li><strong>Protected Frame:</strong> If 1, frame is encrypted (WPA2/WPA3). Critical flag!</li>
+        <li><strong>Order:</strong> If 1, uses HT Order (spatial streams) or A-MPDU aggregation or HE Order.</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <!-- MAC Addressing -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🏷️</span>
+      <h2>MAC Addressing: RA, TA, DA, SA, BSSID</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>The Five MAC Addresses (Not Always All Five)</h3>
+      <p>
+        An 802.11 frame can have up to 4 MAC address fields, depending on To DS / From DS flags.
+        Understanding which is which is crucial.
+      </p>
+
+      <table class="req-table" style="margin: 16px 0;">
+        <thead>
+          <tr><th>Address</th><th>Meaning</th><th>When Present</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>RA</strong></td><td>Receiver Address (radio hop destination)</td><td>Always (first address)</td></tr>
+          <tr><td><strong>TA</strong></td><td>Transmitter Address (radio hop source)</td><td>Always (second address)</td></tr>
+          <tr><td><strong>DA</strong></td><td>Destination Address (final destination)</td><td>When not AP-to-Client</td></tr>
+          <tr><td><strong>SA</strong></td><td>Source Address (original source)</td><td>When not Client-to-AP</td></tr>
+          <tr><td><strong>BSSID</strong></td><td>Basic Service Set ID (AP MAC)</td><td>Management/Data frames (3rd address)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Examples</h3>
+
+      <p><strong>Client → AP (To DS = 1, From DS = 0):</strong></p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px;">
+RA (Receiver)   = AP MAC address (radio hop destination)
+TA (Transmitter) = Client MAC address (radio hop source)
+DA (Destination) = Final destination (may be elsewhere on network)
+SA (Source)     = Client MAC (original source)
+BSSID          = AP MAC address (identifies the network)
+      </pre>
+
+      <p><strong>AP → Client (To DS = 0, From DS = 1):</strong></p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px;">
+RA (Receiver)   = Client MAC address (radio hop destination)
+TA (Transmitter) = AP MAC address (radio hop source)
+DA (Destination) = Client MAC (final destination)
+SA (Source)     = Source on the wired network
+BSSID          = AP MAC address
+      </pre>
+
+      <p><strong>AP → AP (To DS = 1, From DS = 1) — WDS or 4-Address:</strong></p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px;">
+RA (Receiver)   = Destination AP MAC
+TA (Transmitter) = Source AP MAC
+DA (Destination) = Final destination (another AP or network)
+SA (Source)     = Original source
+BSSID          = (not used; 4th address field contains additional info)
+      </pre>
+
+    </div>
+  </div>
+
+  <!-- Reading in Wireshark -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🖥</span>
+      <h2>Decoding Frame Control in Wireshark</h2>
+    </div>
+    <div class="section-card-body">
+
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px;">
+Frame 42: 1234 bytes
+802.11 MAC Header
+  Frame Control: 0x8841
+    .... .... .... ..00 = Protocol Version: 0
+    .... .... .... 10.. = Type: Data (2)
+    .... .... 1000 .... = Subtype: QoS Data (8)
+    
+  Flags: 0x01
+    .......0 = To DS: 0 (not to AP)
+    ......0. = From DS: 1 (from AP)
+    .....0.. = More Fragments: 0
+    ....0... = Retry: 0
+    ...0.... = Power Management: 0
+    ..0..... = More Data: 0
+    .1...... = Protected Frame: 1 ✓ (encrypted)
+    0....... = Order: 0
+    
+  Duration: 0x0000
+  Receiver Address: aa:bb:cc:dd:ee:01 (Client)
+  Transmitter Address: aa:bb:cc:dd:ee:02 (AP)
+  Destination Address: aa:bb:cc:dd:ee:01 (Client)
+  Source Address: 11:22:33:44:55:66 (Wired network)
+  Sequence Control: Sequence number 1234, Fragment 0
+      </pre>
+
+      <p><strong>What this tells you:</strong></p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li>Type = Data (not beacon, not mgmt)</li>
+        <li>Subtype = QoS Data (VoIP, video streaming, etc.)</li>
+        <li>From DS = 1 (AP sending to client)</li>
+        <li>Protected = 1 (encrypted with WPA2/WPA3)</li>
+        <li>RA = Client (radio receiver)</li>
+        <li>TA = AP (radio transmitter)</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <!-- What's Next -->
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#58a6ff; margin-bottom:4px;">
+            Up Next · Day 5
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Decoding Frames in Wireshark
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Now that you understand Frame Control and addressing, we'll open real PCAP files and
+            decode actual captured frames. You'll learn to filter, find anomalies, and trace a
+            complete connection sequence frame-by-frame.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .day-content -->
