@@ -1,0 +1,258 @@
+<!-- ============================================================
+     Day 1: Radio Fundamentals & Why Protocol Matters
+     Fragment loaded into index.html by app.js
+     ============================================================ -->
+<div class="day-content">
+
+  <!-- Hero -->
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 01</span>
+      <span class="phase-badge" style="background:rgba(88,166,255,0.15); color:#58a6ff; border:1px solid rgba(88,166,255,0.3);">
+        Phase 1 · Radio Fundamentals
+      </span>
+    </div>
+    <h1>Radio Fundamentals<br>& Why Protocol Mastery Matters</h1>
+    <p>
+      You've automated WLAN connections. But do you know WHY a device connects at -50 dBm
+      but fails at -75 dBm? Why does 2.4 GHz interfere with Bluetooth? Why do some channels
+      overlap while others don't? Today we rewire your brain: from "it works" to "I understand
+      the physics and engineering that makes it work."
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~60 min</span></div>
+      <div class="hero-stat"><span>📡</span><span>Physics & Engineering</span></div>
+      <div class="hero-stat"><span>🔬</span><span>Frequency, modulation, power</span></div>
+      <div class="hero-stat"><span>📊</span><span>dBm, EIRP, path loss</span></div>
+    </div>
+  </div>
+
+  <!-- The Why -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤔</span>
+      <h2>The 'Why' — From Automation to Protocol Mastery</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>Automation Without Understanding Is Brittle</h3>
+      <p>
+        You can automate a connection without understanding radio. You write a script that
+        calls <code>wpa_supplicant</code> and it works. But what happens when it doesn't?
+        When a device connects at 1 Mbps instead of 150 Mbps? When roaming takes 500 ms
+        instead of 50 ms? When an AP on Channel 11 destroys throughput for a device on
+        Channel 1?
+      </p>
+      <p>
+        Without protocol knowledge, you're blind. You see failures but can't diagnose them.
+        With protocol knowledge, you can read a Wireshark capture and immediately see:
+        "The device tried to connect but the AP sent a deauth because channel mismatch."
+        Or: "The beacon is malformed—here's the exact field that's wrong."
+      </p>
+
+      <div class="callout">
+        <strong>Protocol mastery is the difference between an automation engineer and a protocol engineer.</strong><br>
+        Automation engineers write scripts. Protocol engineers understand why those scripts
+        succeed or fail at the frame level. This course makes you the latter.
+      </div>
+
+      <h3>What You're Starting Today</h3>
+      <p>
+        We're building from the ground up: the physics of radio transmission, how frequency
+        works, what modulation is and why different modulations have different speeds and
+        ranges, how channels are allocated, why power matters, and how all of this impacts
+        the frames you'll see in Wireshark.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- Radio Fundamentals -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📡</span>
+      <h2>Radio Fundamentals: Frequency, Power & Modulation</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>Frequency: The Foundation</h3>
+      <p>
+        802.11 operates in two unlicensed bands: 2.4 GHz and 5 GHz. (6 GHz is new, we'll cover it later.)
+      </p>
+      <p>
+        <strong>2.4 GHz (2400–2500 MHz):</strong> 14 channels, 22 MHz wide each (with overlap).
+        Shared with Bluetooth, baby monitors, microwaves, cordless phones. Congested, but longer range.
+      </p>
+      <p>
+        <strong>5 GHz (5150–5925 MHz):</strong> 25+ channels, 20–160 MHz wide (configurable). Less interference,
+        shorter range. Higher frequencies = shorter wavelengths = faster data rates.
+      </p>
+
+      <div class="step-label">Why Frequency Matters</div>
+      <p>
+        Frequency determines three things: <strong>wavelength, propagation distance, and data rate.</strong>
+      </p>
+      <ul style="margin: 12px 0 0 20px;">
+        <li><strong>Wavelength</strong>: 2.4 GHz = ~12 cm wavelength. 5 GHz = ~6 cm. Shorter wavelengths
+          are absorbed more easily by obstacles (walls, furniture) → 5 GHz has shorter range.</li>
+        <li><strong>Propagation:</strong> 2.4 GHz penetrates walls better. 5 GHz penetrates walls worse
+          but has more spectrum and less interference.</li>
+        <li><strong>Data Rate:</strong> 5 GHz can support higher modulation rates (up to 1200 Mbps in 802.11ax)
+          because it has more bandwidth available.</li>
+      </ul>
+
+      <h3>Power: Measured in dBm</h3>
+      <p>
+        Radio power is measured in <strong>dBm (decibels relative to 1 milliwatt)</strong>. It's logarithmic.
+      </p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:13px;">
++30 dBm = 1 Watt
++20 dBm = 100 mW
++10 dBm = 10 mW
+  0 dBm = 1 mW
+-10 dBm = 0.1 mW
+-20 dBm = 0.01 mW (very weak)
+      </pre>
+      <p>
+        <strong>EIRP (Effective Isotropic Radiated Power)</strong> is the actual power transmitted,
+        accounting for antenna gain. Most 802.11 devices are limited to 20 dBm (100 mW) in the USA
+        and Europe.
+      </p>
+
+      <h3>Signal Strength: RSSI & Path Loss</h3>
+      <p>
+        <strong>RSSI (Received Signal Strength Indicator)</strong> is measured in dBm. It's negative.
+        A device 1 meter away: -40 dBm. A device 50 meters away: -85 dBm.
+      </p>
+      <p>
+        <strong>Path loss</strong> is why. Radio signals weaken as distance increases. In free space
+        (no obstacles), signal strength drops 20 dB for every 10× increase in distance. In a building
+        with walls, it's worse.
+      </p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:13px;">
+Free Space Path Loss (dB) = 20 * log10(distance) + 20 * log10(frequency) - 147.55
+
+Example: 1 meter at 2.4 GHz = ~40 dB loss
+         10 meters at 2.4 GHz = ~60 dB loss
+         100 meters at 2.4 GHz = ~80 dB loss
+      </pre>
+
+      <h3>Modulation: BPSK, QPSK, 16-QAM, 64-QAM</h3>
+      <p>
+        Modulation converts digital data into radio waves. Different modulations have different
+        speeds and range tradeoffs.
+      </p>
+      <table class="req-table" style="margin:16px 0;">
+        <thead>
+          <tr><th>Modulation</th><th>Data Rate (OFDM)</th><th>Robustness</th><th>Range</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>BPSK (1 bit/symbol)</td><td>6 Mbps</td><td>Very robust</td><td>Longest</td></tr>
+          <tr><td>QPSK (2 bits/symbol)</td><td>12–24 Mbps</td><td>Robust</td><td>Long</td></tr>
+          <tr><td>16-QAM (4 bits/symbol)</td><td>48–54 Mbps</td><td>Medium</td><td>Medium</td></tr>
+          <tr><td>64-QAM (6 bits/symbol)</td><td>108–150 Mbps</td><td>Fragile</td><td>Short</td></tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>Why the tradeoff?</strong> More bits per symbol = smaller spacing between signal states.
+        In a noisy environment, those states get confused. BPSK is robust; 64-QAM requires clean signal.
+      </p>
+
+      <h3>Channels: Overlapping vs. Non-Overlapping</h3>
+      <p>
+        <strong>2.4 GHz:</strong> 14 channels, 5 MHz apart, each 22 MHz wide. They overlap heavily.
+        Only channels 1, 6, 11 are non-overlapping in the USA.
+      </p>
+      <p>
+        <strong>5 GHz:</strong> Channels are 5 MHz apart. Multiple non-overlapping channels: 36–48, 52–144, 149–165, etc.
+      </p>
+      <p>
+        <strong>Why non-overlapping matters:</strong> If two APs use overlapping channels, they interfere.
+        Devices hear both and get confused. Rate drops, latency increases, connections fail.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- Why Protocol Mastery Matters -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎯</span>
+      <h2>Why Protocol Mastery Unlocks Your Career</h2>
+    </div>
+    <div class="section-card-body">
+
+      <p>
+        Protocol knowledge separates junior engineers from architects. Here's what you'll be able to do
+        after this course:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height:2;">
+        <li><strong>Read a Wireshark capture</strong> and diagnose issues at the frame level</li>
+        <li><strong>Understand why</strong> a device connects at some RSSI thresholds but not others</li>
+        <li><strong>Decode beacon frames</strong> and validate AP configuration correctness</li>
+        <li><strong>Analyze roaming failures</strong> by reading reassociation exchanges</li>
+        <li><strong>Detect attacks</strong> (deauth floods, fake beacons) by pattern matching on frames</li>
+        <li><strong>Validate WPA3</strong> SAE handshakes without running a full test</li>
+        <li><strong>Build tools</strong> that automatically parse and validate any 802.11 protocol</li>
+      </ul>
+
+      <p style="margin-top:20px;">
+        This is what separates a script-writer from a real engineer.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- Expected Output -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🖥</span>
+      <h2>Real-World Example: Reading an RSSI Chart</h2>
+    </div>
+    <div class="section-card-body">
+
+      <p>
+        You're troubleshooting why a device won't connect to an AP 50 meters away.
+        You measure RSSI: -82 dBm. AP transmit power: 20 dBm. Antenna gain: 6 dBi.
+        Expected path loss at 50m: ~75 dB. Actual received power: 20 + 6 - 75 = -49 dBm.
+        But you're seeing -82 dBm.
+      </p>
+
+      <p>
+        <strong>Protocol understanding:</strong> The extra 33 dB loss means there are obstacles.
+        Maybe the path crosses a reinforced concrete wall (-15 dB) and a metal door (-18 dB).
+        Or there's heavy interference on this channel. The device is trying to connect using
+        64-QAM (requires -65 dBm), but it's only seeing -82 dBm. It should fall back to QPSK
+        (-80 dBm range). If it's not, that's a modulation fallback bug in the driver.
+      </p>
+
+      <p style="margin-top:12px; color:#8b949e; font-style:italic;">
+        Without protocol knowledge, you just say "move closer." With it, you diagnose the root cause.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- What's Next -->
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#58a6ff; margin-bottom:4px;">
+            Up Next · Day 2
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Frequency, Modulation & Data Rates
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Today you learned why frequency matters. Tomorrow we dive deep into modulation
+            schemes: BPSK, QPSK, QAM. We'll calculate exact data rates and understand why
+            802.11ac reached 433 Mbps (and how 802.11ax reached 1200 Mbps).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .day-content -->
