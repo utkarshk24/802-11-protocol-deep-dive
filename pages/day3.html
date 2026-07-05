@@ -1,0 +1,259 @@
+<!-- ============================================================
+     Day 3: PLCP Headers & Physical Layer Frames
+     Fragment loaded into index.html by app.js
+     ============================================================ -->
+<div class="day-content">
+
+  <!-- Hero -->
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 03</span>
+      <span class="phase-badge" style="background:rgba(88,166,255,0.15); color:#58a6ff; border:1px solid rgba(88,166,255,0.3);">
+        Phase 1 · Radio Fundamentals
+      </span>
+    </div>
+    <h1>PLCP Headers<br>& Physical Layer Frames</h1>
+    <p>
+      Before every data frame, the transmitter sends a preamble that says "Hey, I'm about to send
+      data at this speed, on this channel, with this length." The PLCP (Physical Layer Convergence
+      Procedure) header is how the receiver synchronizes and knows what modulation to expect.
+      Today we decode that header bit-by-bit.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~70 min</span></div>
+      <div class="hero-stat"><span>🔬</span><span>Preamble structure</span></div>
+      <div class="hero-stat"><span>📊</span><span>Frame format</span></div>
+      <div class="hero-stat"><span>🧬</span><span>Bit-level dissection</span></div>
+    </div>
+  </div>
+
+  <!-- The Why -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤔</span>
+      <h2>The 'Why' — How Receivers Know What to Expect</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>The Synchronization Problem</h3>
+      <p>
+        A receiver is listening on a channel. Suddenly, a radio signal appears. The receiver has
+        NO idea what's coming: is it a beacon? A data frame? What modulation? What length?
+        What channel width?
+      </p>
+      <p>
+        The transmitter solves this by sending a PLCP preamble first: "Here comes data, MCS 5,
+        length 1500 bytes." The receiver decodes the preamble, adjusts its demodulator, and
+        then reads the data.
+      </p>
+
+      <div class="callout">
+        <strong>The PLCP header is a contract between transmitter and receiver.</strong><br>
+        "I'm sending you this data at this speed, with this length. Be ready." Without it, chaos.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 802.11a/g PPDU Structure -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📡</span>
+      <h2>802.11a/g PPDU (OFDM) Structure</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>Full Frame Anatomy</h3>
+      <p>
+        Every 802.11a/g/n data frame (PPDU) consists of:
+      </p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px; overflow-x:auto;">
+┌─────────────────────────────────────────────────────────────┐
+│ Preamble + SIGNAL Header (sent at 6 Mbps = BPSK)          │
+│                                                             │
+│ ┌──────────────────┬──────────────────┬────────────────┐   │
+│ │   L-STF          │     L-LTF        │   L-SIG        │   │
+│ │ (4 µs)           │   (4 µs)         │  (4 µs)        │   │
+│ │ Short Training   │  Long Training   │  SIGNAL Field  │   │
+│ │ Field            │  Field           │                │   │
+│ └──────────────────┴──────────────────┴────────────────┘   │
+│                                                             │
+│  Total preamble: 12 µs (always at 6 Mbps)                  │
+└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│ MAC Frame Payload (sent at variable MCS rate)              │
+│                                                             │
+│ ┌──────────────────────────────────────────────────────┐   │
+│ │ MAC Header + Data + FCS (CRC)                        │   │
+│ │ Can be 24–3840 bytes depending on MCS                │   │
+│ └──────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+      </pre>
+
+      <h3>L-STF: Legacy Short Training Field (4 µs)</h3>
+      <p>
+        The L-STF allows the receiver to detect the presence of a frame and estimate the channel.
+        It consists of 10 repetitions of a short sequence, sent at 6 Mbps (BPSK).
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li>Used for automatic gain control (AGC)</li>
+        <li>Gives the receiver time to adjust amplifier gain</li>
+        <li>Provides coarse timing synchronization</li>
+      </ul>
+
+      <h3>L-LTF: Legacy Long Training Field (4 µs)</h3>
+      <p>
+        The L-LTF refines synchronization and estimates the channel response (how multipath affects
+        the signal). Consists of 2 OFDM symbols.
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li>Fine timing and frequency offset correction</li>
+        <li>Channel estimation (enables equalization)</li>
+        <li>Allows 802.11n/ac devices to detect OFDM frame</li>
+      </ul>
+
+      <h3>L-SIG: Legacy SIGNAL Field (4 µs = 1 OFDM symbol)</h3>
+      <p>
+        The L-SIG tells the receiver: "What MCS are you about to see? How many bytes of data?"
+        It's always sent at 6 Mbps (BPSK), so every receiver can decode it.
+      </p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px;">
+L-SIG Field (24 bits):
+
+Bit 0:      Rate (4 bits) = MCS index (0–7 for 802.11a/g)
+Bit 4:      Reserved (1 bit)
+Bit 5:      Length (12 bits) = number of octets in MAC frame
+Bit 17:     Parity (1 bit) = even parity over bits 0–16
+Bit 18:     Tail (6 bits) = 000000 (helps receiver sync)
+
+Example: Rate = 0101 (MCS 5 = 48 Mbps), Length = 1500 bytes
+      </pre>
+
+      <h3>The Tail Bits & Code Tail</h3>
+      <p>
+        The Tail field (6 zero bits after L-SIG) is part of the convolutional encoder's tail.
+        It ensures the encoder returns to the zero state, allowing clean frame delineation.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- Data Field: OFDM Symbols -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">⚡</span>
+      <h2>Data Field: OFDM Symbols</h2>
+    </div>
+    <div class="section-card-body">
+
+      <h3>How the Data is Sent</h3>
+      <p>
+        After the preamble and L-SIG, the transmitter sends the actual MAC frame data using the MCS
+        specified in L-SIG. Each symbol is an OFDM symbol (4 µs for 802.11a/g/n).
+      </p>
+
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px; overflow-x:auto;">
+Example: 1500-byte frame at MCS 5 (48 Mbps)
+
+L-SIG says: "48 Mbps, 1500 bytes"
+
+Receiver calculates:
+  Bits to send = 1500 bytes × 8 bits/byte = 12,000 bits
+  MCS 5 = 48 Mbps = 48,000,000 bits/sec
+  
+  Coding overhead: With 3/4 coding, need 12,000 × 4/3 = 16,000 bits
+  
+  Bits per symbol = 4 (from 64-QAM in MCS 5)
+  Coded bits per symbol = 4 × 52 subcarriers = 208 bits/symbol
+  
+  Symbols needed = 16,000 / 208 = 77 symbols
+  
+  Time = 77 symbols × 4 µs/symbol = 308 µs
+  
+  Total frame time = 12 µs (preamble+L-SIG) + 308 µs (data) = 320 µs
+      </pre>
+
+      <h3>Pilot Subcarriers</h3>
+      <p>
+        Not all subcarriers carry data. 4 "pilot" subcarriers carry known reference signals that help
+        the receiver track frequency offsets and phase errors during the frame.
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li>Pilots are at subcarriers -21, -7, 7, 21</li>
+        <li>Receiver compares received pilots to expected values</li>
+        <li>Adjusts demodulation in real-time if frequency drifts</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <!-- Decoding L-SIG in Wireshark -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🖥</span>
+      <h2>Reading PLCP Headers in Wireshark</h2>
+    </div>
+    <div class="section-card-body">
+
+      <p>
+        In Wireshark, when you capture at radiotap layer, you see PLCP information:
+      </p>
+      <pre style="background:#f6f8fa; padding:12px; border-radius:6px; margin:12px 0; font-size:12px;">
+Radiotap Header v0
+  Header revision: 0
+  Header pad: 0
+  Header length: 26
+  Present flags: Flags, Rate, Channel, dBm Antenna Signal, Antenna
+  Flags: 0x0010
+  Data Rate: 48 Mbps              ← From L-SIG Rate field
+  Channel Frequency: 5180 MHz     ← From regulatory domain
+  Channel Flags: Turbo (a mode)
+  SSI Signal: -45 dBm             ← Received power
+  Antenna: 0
+
+802.11 MAC Header
+  Frame Control: 0x0841
+  Duration/ID: 0x0000
+  Receiver Address: aa:bb:cc:dd:ee:01
+  Transmitter Address: aa:bb:cc:dd:ee:02
+  Sequence number: 1234
+  Fragment number: 0
+
+Frame body: 1500 bytes
+      </pre>
+
+      <p style="margin-top:16px;">
+        <strong>What Wireshark shows you:</strong>
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Data Rate (48 Mbps):</strong> Decoded from L-SIG Rate field</li>
+        <li><strong>RSSI (-45 dBm):</strong> Signal strength measured during preamble</li>
+        <li><strong>Frame length:</strong> Decoded from L-SIG Length field (1500 bytes)</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <!-- What's Next -->
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#58a6ff; margin-bottom:4px;">
+            Up Next · Day 4
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            MAC Frame Anatomy: Frame Control & Addresses
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Now that you understand the PHY layer, we zoom in on the MAC layer. Every frame has a
+            Frame Control field that tells you the frame type (beacon, data, mgmt), direction (to/from DS),
+            and flags (encrypted, aggregated, etc.). We'll decode each bit.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .day-content -->

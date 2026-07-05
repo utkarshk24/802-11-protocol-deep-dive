@@ -12,7 +12,7 @@ const CURRICULUM = [
     days: [
       { day: 1,  title: "Radio Fundamentals & Why Protocol Matters",   file: "pages/day1.html",  status: "available" },
       { day: 2,  title: "Frequency, Modulation & Data Rates",          file: "pages/day2.html",  status: "available" },
-      { day: 3,  title: "PLCP Headers & Physical Layer Frames",        file: "pages/day3.html",  status: "coming-soon" },
+      { day: 3,  title: "PLCP Headers & Physical Layer Frames",        file: "pages/day3.html",  status: "available" },
       { day: 4,  title: "MAC Frame Anatomy: Frame Control & Addresses", file: "pages/day4.html",  status: "coming-soon" },
       { day: 5,  title: "Decoding Frames in Wireshark",                file: "pages/day5.html",  status: "coming-soon" },
       { day: 6,  title: "Building Frame Parsers in Scapy",             file: "pages/day6.html",  status: "coming-soon" },
