@@ -3,7 +3,7 @@
 // ============================================================
 
 // ---- Course start date (Day 1 launch) ----------------------
-const COURSE_START_DATE = '2026-06-28'; // YYYY-MM-DD, local time
+const COURSE_START_DATE = '2026-04-01'; // YYYY-MM-DD, local time (all days unlocked)
 
 function getAvailableDayCount() {
   const start   = new Date(COURSE_START_DATE + 'T00:00:00');
