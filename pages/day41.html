@@ -1,0 +1,136 @@
+<!-- Day 41: Key Rotation & Rekeying Protocols -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 41</span>
+      <span class="phase-badge" style="background:rgba(248,81,73,0.15); color:#f85149; border:1px solid rgba(248,81,73,0.3);">
+        Phase 5 · 802.11be &amp; Security
+      </span>
+    </div>
+    <h1>Key Rotation<br>&amp; Rekeying Protocols</h1>
+    <p>
+      The 4-way handshake is where a WLAN's keys are born. Today we walk all four EAPOL messages, the
+      PTK/GTK key hierarchy, how group keys rotate, and the KRACK attack — the 2017 flaw that forced
+      the industry to patch the handshake itself.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~65 min</span></div>
+      <div class="hero-stat"><span>🤝</span><span>4-way handshake</span></div>
+      <div class="hero-stat"><span>🔑</span><span>PTK / GTK hierarchy</span></div>
+      <div class="hero-stat"><span>💥</span><span>KRACK</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔑</span>
+      <h2>The Key Hierarchy</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Everything descends from the <strong>PMK</strong> (from SAE, PSK, or 802.1X). The handshake
+        derives the session keys:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Key Derivation</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">PMK  (Pairwise Master Key)   from SAE / PSK / 802.1X
+ |
+ |  PTK = PRF(PMK, ANonce, SNonce, AP_MAC, STA_MAC)
+ v
+PTK  (Pairwise Transient Key)  splits into:
+       KCK  - Key Confirmation Key (protects handshake MICs)
+       KEK  - Key Encryption Key   (encrypts the GTK in msg 3)
+       TK   - Temporal Key         (encrypts actual data frames)
+
+GTK  (Group Temporal Key)   shared, for broadcast/multicast frames
+                            delivered encrypted under KEK</code></pre>
+      </div>
+      <div class="callout">
+        <strong>Nonces make every session key unique.</strong><br>
+        ANonce (from AP) and SNonce (from STA) are fresh random numbers each connection. Even with the
+        same password, every association produces a different PTK — no key reuse across sessions.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤝</span>
+      <h2>The 4-Way Handshake</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">EAPOL 4-Way Handshake</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Msg 1  AP  -> STA   ANonce
+         STA now has ANonce + SNonce -> derives PTK
+
+Msg 2  STA -> AP    SNonce + MIC
+         AP now has both nonces -> derives same PTK, verifies MIC
+
+Msg 3  AP  -> STA   GTK (encrypted w/ KEK) + MIC
+         STA verifies MIC, installs PTK + GTK
+
+Msg 4  STA -> AP    ACK + MIC
+         both install keys; encrypted data can flow</code></pre>
+      </div>
+      <p style="margin-top:12px;">
+        Notice: the PMK is never sent. The nonces and MICs prove both sides know the PMK without
+        revealing it — and confirm they derived identical session keys.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔄</span>
+      <h2>Group Rekeying &amp; the KRACK Attack</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The <strong>GTK</strong> is shared by all clients, so when a device leaves (or on a timer), the
+        AP rotates it via a 2-way <strong>Group Key Handshake</strong> to preserve forward/backward
+        secrecy for broadcast traffic.
+      </p>
+      <p>
+        In 2017, <strong>KRACK</strong> (Key Reinstallation Attack) showed that an attacker could
+        replay handshake message 3, forcing a client to <em>reinstall</em> an already-in-use PTK and
+        reset its packet-number counter — enabling nonce reuse and, with some ciphers, decryption or
+        forgery. The flaw was in the <em>state machine</em>, not the crypto.
+      </p>
+      <div class="callout">
+        <strong>The KRACK fix: never reinstall a key.</strong><br>
+        Patched clients refuse to reinstall an already-installed PTK/GTK, and treat a retransmitted
+        msg 3 without resetting the nonce counter. KRACK is why keeping supplicant firmware/OS patched
+        matters — the protocol was fine; implementations had to stop being naive.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#f85149; margin-bottom:4px;">
+            Up Next · Day 42
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Management Frame Protection (MFP)
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Data frames are encrypted, but management frames were the weak point (Day 14). Tomorrow:
+            802.11w MFP, protected deauth/disassoc, the SA Query, and BIP.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

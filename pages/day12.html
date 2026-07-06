@@ -1,0 +1,122 @@
+<!-- Day 12: Association Request & Response -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 12</span>
+      <span class="phase-badge" style="background:rgba(63,185,80,0.15); color:#3fb950; border:1px solid rgba(63,185,80,0.3);">
+        Phase 2 · Management Frames
+      </span>
+    </div>
+    <h1>Association Request<br>&amp; Response</h1>
+    <p>
+      After authentication, the station requests to join the BSS. Association negotiates
+      capabilities, supported rates, and security suites, and — if accepted — the AP assigns an
+      Association ID (AID). Today we decode both frames field-by-field.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🤝</span><span>Capability negotiation</span></div>
+      <div class="hero-stat"><span>🆔</span><span>Association ID</span></div>
+      <div class="hero-stat"><span>🐍</span><span>Assoc parser</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤝</span>
+      <h2>Association Request (Subtype 0)</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The client's Association Request advertises what it can do and which network it wants. Fixed
+        fields plus IEs:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Capability Info (2 bytes):</strong> ESS, Privacy, Short Preamble, Spectrum Mgmt, QoS support.</li>
+        <li><strong>Listen Interval (2 bytes):</strong> How often (in beacon intervals) the station wakes to check for buffered traffic — the AP uses this to size power-save buffers.</li>
+        <li><strong>SSID IE:</strong> The exact network the client wants to join.</li>
+        <li><strong>Supported/Extended Rates:</strong> Data rates the client supports.</li>
+        <li><strong>RSN IE:</strong> Chosen pairwise cipher, AKM suite (PSK, SAE, 802.1X), and group cipher — this must be a subset of the AP's advertised RSN.</li>
+        <li><strong>HT/VHT/HE Capabilities:</strong> The client's PHY abilities so the AP knows the fastest common rate.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🆔</span>
+      <h2>Association Response (Subtype 1)</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The AP replies with a status code and, on success, an <strong>Association ID</strong>:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Capability Info:</strong> The AP's capabilities (echoing what the BSS supports).</li>
+        <li><strong>Status Code:</strong> 0 = success. Common rejections: 17 (AP can't handle more stations), 18 (rates mismatch), 40–45 (invalid IE / cipher / AKM).</li>
+        <li><strong>Association ID (AID):</strong> A 14-bit identifier (1–2007) the AP assigns. The AID indexes the station's bit in the TIM for power-save buffering.</li>
+      </ul>
+      <div class="callout">
+        <strong>The AID is how power save works.</strong><br>
+        When the AP buffers frames for a sleeping station, it sets that station's AID bit in the
+        beacon's TIM element. The station wakes, sees its bit, and sends a PS-Poll to retrieve the
+        buffered frames. No AID, no targeted power-save delivery.
+      </div>
+
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">assoc_parser.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, Dot11, Dot11AssoReq, Dot11AssoResp, Dot11Elt
+
+for pkt in rdpcap("capture.pcap"):
+    if pkt.haslayer(Dot11AssoReq):
+        ssid = pkt[Dot11Elt].info.decode(errors="ignore")
+        print(f"[REQ]  {pkt[Dot11].addr2} wants SSID '{ssid}' "
+              f"listen_int={pkt[Dot11AssoReq].listen_interval}")
+    elif pkt.haslayer(Dot11AssoResp):
+        r = pkt[Dot11AssoResp]
+        aid = r.AID & 0x3fff
+        result = "OK" if r.status == 0 else f"REJECT({r.status})"
+        print(f"[RESP] {pkt[Dot11].addr2} -> {pkt[Dot11].addr1}  "
+              f"{result}  AID={aid}")</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Watch a Full Join</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Capture your own device connecting. Confirm the order: Probe → Auth → Assoc Req → Assoc Resp → 4-way handshake.</li>
+        <li><strong>Task 2:</strong> Extract the AID your AP assigned. Reconnect — did it change?</li>
+        <li><strong>Task 3:</strong> Force a rejection (wrong password / unsupported cipher) and read the status code the AP returns.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#3fb950; margin-bottom:4px;">
+            Up Next · Day 13
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Reassociation for Roaming (FT vs Non-FT)
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            One AP is easy. Tomorrow: how clients roam between APs, the reassociation frame, and how
+            802.11r Fast BSS Transition cuts handoff from hundreds of milliseconds to under 50.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

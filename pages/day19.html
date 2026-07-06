@@ -1,0 +1,122 @@
+<!-- Day 19: Why 802.11ac Was Revolutionary -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 19</span>
+      <span class="phase-badge" style="background:rgba(210,153,34,0.15); color:#d29922; border:1px solid rgba(210,153,34,0.3);">
+        Phase 3 · 802.11ac (WiFi 5)
+      </span>
+    </div>
+    <h1>Why 802.11ac<br>Was Revolutionary</h1>
+    <p>
+      802.11ac (Wi-Fi 5, 2013) was the jump to gigabit Wi-Fi. It did it by going all-in on 5 GHz,
+      doubling and quadrupling channel width, adding 256-QAM, up to 8 spatial streams, and
+      multi-user beamforming. Today we set the stage for the whole VHT phase.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~50 min</span></div>
+      <div class="hero-stat"><span>🚀</span><span>Gigabit Wi-Fi</span></div>
+      <div class="hero-stat"><span>📶</span><span>VHT overview</span></div>
+      <div class="hero-stat"><span>📡</span><span>5 GHz focus</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🚀</span>
+      <h2>The Four Big Levers</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        802.11ac (Very High Throughput, VHT) pushed data rates from 802.11n's ~600 Mbps to a
+        theoretical ~6.9 Gbps by turning four dials at once:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Wider channels:</strong> 20 → 40 → 80 → 160 MHz. Double the bandwidth, double the rate.</li>
+        <li><strong>Denser modulation:</strong> Added <strong>256-QAM</strong> (8 bits/symbol) on top of 64-QAM — a 33% raw gain when SNR allows.</li>
+        <li><strong>More spatial streams:</strong> Up to <strong>8 streams</strong> via MIMO (though most clients do 1–2).</li>
+        <li><strong>MU-MIMO (downlink):</strong> The AP transmits to multiple clients <em>simultaneously</em> using beamforming, instead of time-slicing.</li>
+      </ul>
+      <div class="callout">
+        <strong>802.11ac is 5 GHz only.</strong><br>
+        VHT operates exclusively in the 5 GHz band, where wide contiguous channels actually exist.
+        2.4 GHz stays on 802.11n (HT). This is why dual-band APs advertise 802.11n on 2.4 GHz and
+        802.11ac on 5 GHz simultaneously.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📊</span>
+      <h2>Data Rate Progression</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The peak PHY rate is the product of bandwidth, modulation density, coding, and streams. A
+        few reference points (long GI, single stream unless noted):
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">VHT Rate Milestones</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Config                                  Peak PHY rate
+20 MHz, 64-QAM,  1 SS  (802.11n-like)     ~65 Mbps
+80 MHz, 256-QAM, 1 SS                     ~433 Mbps
+80 MHz, 256-QAM, 2 SS                     ~867 Mbps
+160 MHz, 256-QAM, 2 SS                    ~1.73 Gbps
+160 MHz, 256-QAM, 8 SS (theoretical max) ~6.93 Gbps</code></pre>
+      </div>
+      <p style="margin-top:12px;">
+        Real-world throughput is roughly half the PHY rate after MAC overhead, contention, and
+        retries — but even so, 802.11ac made 1 Gbps Wi-Fi a reality for the first time.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🆚</span>
+      <h2>802.11n vs 802.11ac at a Glance</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">HT vs VHT</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Feature            802.11n (HT)      802.11ac (VHT)
+Bands              2.4 + 5 GHz       5 GHz only
+Max channel width  40 MHz            160 MHz
+Max modulation     64-QAM            256-QAM
+Max spatial streams 4                8
+MU-MIMO            no                yes (downlink)
+Beamforming        optional/messy    standardized (sounding)
+Peak PHY rate      600 Mbps          6.93 Gbps</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#d29922; margin-bottom:4px;">
+            Up Next · Day 20
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            VHT PPDU Structure &amp; PLCP Headers
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            To decode 802.11ac you must read its PHY frame. Tomorrow: the VHT PPDU, the VHT-SIG-A and
+            VHT-SIG-B fields, and how a receiver learns the rate before demodulating the payload.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

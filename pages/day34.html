@@ -1,0 +1,116 @@
+<!-- Day 34: HE Operation & BSS Color -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 34</span>
+      <span class="phase-badge" style="background:rgba(163,113,247,0.15); color:#a371f7; border:1px solid rgba(163,113,247,0.3);">
+        Phase 4 · 802.11ax (WiFi 6)
+      </span>
+    </div>
+    <h1>HE Operation<br>&amp; BSS Color</h1>
+    <p>
+      In an apartment building, your AP hears a dozen neighbors and politely defers to all of them —
+      wasting airtime on networks you'll never use. BSS coloring lets a device recognize
+      "overlapping-BSS" frames and, when safe, ignore them and transmit anyway. Today: spatial reuse.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🎨</span><span>BSS coloring</span></div>
+      <div class="hero-stat"><span>♻️</span><span>Spatial reuse</span></div>
+      <div class="hero-stat"><span>📊</span><span>Adaptive CCA</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎨</span>
+      <h2>What Is a BSS Color?</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        A <strong>BSS Color</strong> is a 6-bit identifier (1–63) the AP assigns to its BSS and stamps
+        into the HE-SIG-A of every HE frame. A receiving device can read the color <em>early</em> in
+        the preamble and instantly know: "this frame belongs to my network (intra-BSS)" or "this is a
+        neighbor's network (inter-BSS / OBSS)."
+      </p>
+      <div class="callout">
+        <strong>Color = a fast "is this mine?" tag.</strong><br>
+        Before BSS coloring, a device had to treat every detectable frame as a reason to defer. With
+        coloring, it distinguishes its own BSS from overlapping ones in the first microseconds of the
+        preamble and can make a smarter decision about whether to wait.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">♻️</span>
+      <h2>Spatial Reuse &amp; Adaptive CCA</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Once frames are colored, 802.11ax enables <strong>spatial reuse</strong> via an adjustable
+        Clear Channel Assessment threshold (OBSS_PD, Overlapping BSS Packet Detect):
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li>Normally a device defers if it detects <em>any</em> signal above the CCA threshold (~ -82 dBm).</li>
+        <li>With spatial reuse, if a frame is identified as <strong>inter-BSS</strong> (different color) and is <em>weak</em> (below a higher OBSS_PD threshold, e.g. -72 dBm), the device may <strong>ignore it and transmit anyway</strong>.</li>
+        <li>To avoid interfering with that distant BSS, it also caps its transmit power — a power/threshold trade managed together.</li>
+      </ul>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Spatial Reuse Decision</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Detect frame -> read BSS color
+  |
+  +-- same color (intra-BSS)?   -> normal CSMA/CA, defer as usual
+  |
+  +-- different color (OBSS)?
+        |
+        +-- signal < OBSS_PD threshold (weak, far away)?
+        |     -> IGNORE it, transmit now (cap TX power)
+        |
+        +-- signal strong (close neighbor)?
+              -> defer normally (don't cause a collision)</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📋</span>
+      <h2>The HE Operation Element &amp; Color Collisions</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The <strong>HE Operation</strong> element in beacons carries the BSS Color info, including the
+        current color and a "BSS Color Disabled" bit. Because there are only 63 colors, two nearby APs
+        can pick the same one — a <strong>color collision</strong>. When an AP detects this (via reports
+        from its clients), it can announce a color change, much like a channel switch. This keeps the
+        "is this mine?" test reliable even as networks come and go.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#a371f7; margin-bottom:4px;">
+            Up Next · Day 35
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            OFDMA Scheduling &amp; Fairness
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            The AP scheduler decides who gets which RU and when. Tomorrow: scheduling strategies,
+            fairness vs efficiency trade-offs, and how to reason about airtime allocation.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

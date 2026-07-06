@@ -1,0 +1,134 @@
+<!-- Day 27: Phase 3 Capstone: VHT Throughput Analysis -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 27</span>
+      <span class="phase-badge" style="background:rgba(210,153,34,0.15); color:#d29922; border:1px solid rgba(210,153,34,0.3);">
+        Phase 3 · Capstone
+      </span>
+    </div>
+    <h1>Phase 3 Capstone:<br>VHT Throughput Analysis</h1>
+    <p>
+      Nine days of 802.11ac converge into one tool. You'll read a VHT capture, extract each frame's
+      rate parameters from radiotap, compute the theoretical PHY rate, and compare it against the
+      actual data volume to expose the gap between "PHY rate" and real throughput.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~90 min</span></div>
+      <div class="hero-stat"><span>📊</span><span>Rate vs throughput</span></div>
+      <div class="hero-stat"><span>🧮</span><span>MCS extraction</span></div>
+      <div class="hero-stat"><span>🐍</span><span>Portfolio project</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎯</span>
+      <h2>The Goal: Explain the Efficiency Gap</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        A link may negotiate 866 Mbps yet deliver 400. The difference is real overhead: contention,
+        inter-frame spacing, ACKs, retries, management traffic, and protection. Your capstone
+        quantifies this by measuring both numbers from a single capture.
+      </p>
+      <div class="callout">
+        <strong>PHY rate ≠ throughput.</strong><br>
+        Rule of thumb: usable TCP throughput is roughly 45–60% of the negotiated PHY rate for a
+        single client. Aggregation (A-MPDU) pushes it higher; retries and mixed legacy clients push
+        it lower. Your tool makes this concrete for a real capture.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>The Throughput Analyzer</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">vht_throughput.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, RadioTap, Dot11
+from collections import defaultdict
+
+MCS = {0:(1,1/2),1:(2,1/2),2:(2,3/4),3:(4,1/2),4:(4,3/4),
+       5:(6,2/3),6:(6,3/4),7:(6,5/6),8:(8,3/4),9:(8,5/6)}
+N_SD = {20:52, 40:108, 80:234, 160:468}
+
+def phy_rate(mcs, bw, nss, sgi=True):
+    bpscs, r = MCS[mcs]
+    t = 3.2e-6 if sgi else 3.6e-6
+    return N_SD[bw] * bpscs * r * nss / t / 1e6   # Mbps
+
+def analyze(pcap):
+    pkts = rdpcap(pcap)
+    t0, t1 = float(pkts[0].time), float(pkts[-1].time)
+    duration = max(t1 - t0, 1e-6)
+
+    data_bytes = 0
+    rate_samples = []
+    for p in pkts:
+        if p.haslayer(Dot11) and p.type == 2:      # data frame
+            data_bytes += len(p)
+        rt = p.getlayer(RadioTap)
+        if rt is not None and hasattr(rt, "MCS_index"):
+            # bw/nss may need driver-specific extraction
+            rate_samples.append(getattr(rt, "MCS_index"))
+
+    actual = data_bytes * 8 / duration / 1e6       # Mbps
+    print(f"Capture duration : {duration:.2f} s")
+    print(f"Data bytes       : {data_bytes:,}")
+    print(f"Actual throughput: {actual:.1f} Mbps")
+    if rate_samples:
+        common = max(set(rate_samples), key=rate_samples.count)
+        theo = phy_rate(common, 80, 2)             # assume 80MHz/2SS
+        print(f"Most common MCS  : {common}")
+        print(f"Theoretical PHY  : {theo:.1f} Mbps")
+        print(f"Efficiency       : {actual / theo * 100:.0f}%")
+
+if __name__ == "__main__":
+    import sys
+    analyze(sys.argv[1])</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🏆</span>
+      <h2>Capstone Challenge</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Capture an iperf3 run over 802.11ac and feed it to the analyzer. How close is your efficiency to the 45–60% rule?</li>
+        <li><strong>Task 2:</strong> Add a per-station breakdown: which client is dragging the airtime down with a low MCS?</li>
+        <li><strong>Task 3:</strong> Count retransmissions (the Retry bit in Frame Control) and correlate high retry rates with low efficiency. Push the finished tool to GitHub.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">🎉</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#a371f7; margin-bottom:4px;">
+            Phase 3 Complete · Up Next Phase 4
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Day 28 — Why 802.11ax Was Revolutionary
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            802.11ac chased peak speed. Phase 4 is 802.11ax (Wi-Fi 6), which chased efficiency in
+            crowded networks — OFDMA, resource units, TWT, and BSS coloring.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

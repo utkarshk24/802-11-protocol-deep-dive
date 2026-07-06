@@ -1,0 +1,129 @@
+<!-- Day 24: 80 MHz & 160 MHz Channels -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 24</span>
+      <span class="phase-badge" style="background:rgba(210,153,34,0.15); color:#d29922; border:1px solid rgba(210,153,34,0.3);">
+        Phase 3 · 802.11ac (WiFi 5)
+      </span>
+    </div>
+    <h1>80 MHz &amp;<br>160 MHz Channels</h1>
+    <p>
+      Channel bonding is 802.11ac's most direct speed lever: gluing 20 MHz channels into 80 or 160
+      MHz doubles then quadruples throughput. But wide channels mean fewer non-overlapping options,
+      more interference, and DFS headaches. Today we cover the mechanics and the trade-offs.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🔗</span><span>Channel bonding</span></div>
+      <div class="hero-stat"><span>🎯</span><span>Primary/secondary</span></div>
+      <div class="hero-stat"><span>📡</span><span>DFS &amp; 160 MHz</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔗</span>
+      <h2>How Bonding Works</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        802.11ac builds wide channels from 20 MHz building blocks: two 20s make a 40, two 40s make an
+        80, two 80s make a 160 (or two non-contiguous 80s make an "80+80"). One 20 MHz block is the
+        <strong>primary channel</strong>; management and beacons live there, and legacy clients camp on it.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Bonding Hierarchy</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">[20][20][20][20][20][20][20][20]   eight 20 MHz channels
+[  40  ][  40  ][  40  ][  40  ]   40 MHz pairs
+[      80      ][      80      ]   80 MHz
+[            160            ]      160 MHz
+
+Primary 20 -> Primary 40 -> Primary 80  (nested)
+Secondary channels are added around the primary.</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎯</span>
+      <h2>Primary, Secondary &amp; CCA</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Before transmitting on a wide channel, the AP must find the whole thing idle. It runs Clear
+        Channel Assessment (CCA) on the primary 20 (full sensitivity) and on the secondary segments
+        (energy detect). If a secondary is busy, the AP <strong>falls back</strong> to a narrower
+        width rather than waiting — dynamic bandwidth operation.
+      </p>
+      <div class="callout">
+        <strong>Wide channels are fragile in crowded air.</strong><br>
+        An 80 MHz transmission needs 80 MHz of silence. In an apartment building with a dozen APs, a
+        single neighbor on your secondary channel forces you down to 40 or 20 MHz. This is why "just
+        set 160 MHz" often <em>lowers</em> real throughput in dense environments.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📡</span>
+      <h2>DFS and the 160 MHz Problem</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        In the US/EU, only a handful of 20 MHz channels sit outside the DFS (radar) bands. To form a
+        contiguous 160 MHz channel you almost always must include <strong>DFS channels</strong>,
+        which means:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li>A mandatory Channel Availability Check (typically 60 s, up to 10 min on weather-radar channels) before first use.</li>
+        <li>Continuous radar monitoring — a detection forces an immediate Channel Switch Announcement (Day 15).</li>
+        <li>Many client devices historically avoided or poorly supported DFS/160 MHz, so the AP may never actually get to use it.</li>
+      </ul>
+      <p>
+        The practical result: 80 MHz is the sweet spot for most 802.11ac deployments. 160 MHz shines
+        in clean spectrum (labs, point-to-point, some enterprise) but is rarely dependable at home.
+      </p>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Channel Planning</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Scan your 5 GHz band. How many APs are on 80 MHz? How many overlap your primary?</li>
+        <li><strong>Task 2:</strong> Identify which of your usable channels are DFS. Could you build a non-DFS 80 MHz channel?</li>
+        <li><strong>Task 3:</strong> Force your AP to 160 MHz, then to 40 MHz, and benchmark real throughput at close and far range. Which wins where?</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#d29922; margin-bottom:4px;">
+            Up Next · Day 25
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Beamforming: Explicit, Implicit &amp; Sounding
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Wide channels give you raw bandwidth; beamforming makes it reach. Tomorrow: the sounding
+            protocol, compressed feedback, and how the AP steers energy toward each client.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

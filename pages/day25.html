@@ -1,0 +1,127 @@
+<!-- Day 25: Beamforming: Explicit, Implicit & Sounding -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 25</span>
+      <span class="phase-badge" style="background:rgba(210,153,34,0.15); color:#d29922; border:1px solid rgba(210,153,34,0.3);">
+        Phase 3 · 802.11ac (WiFi 5)
+      </span>
+    </div>
+    <h1>Beamforming: Explicit,<br>Implicit &amp; Sounding</h1>
+    <p>
+      Beamforming focuses transmit energy toward a specific receiver, raising its SNR without more
+      power. 802.11ac standardized <em>explicit</em> beamforming with a clean sounding protocol —
+      the same machinery that makes downlink MU-MIMO possible. Today we walk the sounding sequence.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~60 min</span></div>
+      <div class="hero-stat"><span>🎯</span><span>Beam steering</span></div>
+      <div class="hero-stat"><span>📻</span><span>NDP sounding</span></div>
+      <div class="hero-stat"><span>🧮</span><span>Compressed feedback</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎯</span>
+      <h2>Why Beamforming Works</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        With multiple antennas, an AP can adjust the <strong>phase and amplitude</strong> of the
+        signal on each so the copies arrive <em>in phase</em> at the target client — constructively
+        adding to a stronger signal — while partially canceling elsewhere. More SNR at the client
+        means a higher sustainable MCS and better range.
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Beamformer:</strong> the transmitter that steers (usually the AP).</li>
+        <li><strong>Beamformee:</strong> the receiver being steered toward (the client).</li>
+        <li><strong>Steering matrix (Q):</strong> the per-subcarrier weights the beamformer applies.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📻</span>
+      <h2>Explicit vs Implicit</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        802.11n allowed both; 802.11ac dropped implicit and standardized on <strong>explicit</strong>:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Implicit:</strong> The beamformer estimates the channel from frames the client sends, assuming reciprocity. No feedback needed, but calibration is fragile — this is why it was abandoned.</li>
+        <li><strong>Explicit (VHT):</strong> The client <em>measures</em> the channel from a sounding frame and sends back compressed feedback. Robust and interoperable, at the cost of some airtime.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔄</span>
+      <h2>The Sounding Protocol</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        VHT explicit beamforming uses a Null Data Packet (NDP) sounding sequence:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">NDP Sounding Sequence</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">1. AP -> ALL   NDP Announcement (VHT NDPA)
+                 "sounding coming; here are the target STAs"
+2. AP -> ALL   Null Data Packet (NDP)
+                 preamble only (VHT-LTFs), no data payload
+3. STA -> AP   VHT Compressed Beamforming feedback
+                 the measured steering matrix (Q), compressed as angles
+   (for MU: AP polls each additional STA with a
+    Beamforming Report Poll before its feedback)</code></pre>
+      </div>
+      <div class="callout">
+        <strong>Feedback is compressed to angles.</strong><br>
+        Sending a full complex channel matrix per subcarrier would be enormous. 802.11ac uses Givens
+        rotations to represent the steering matrix as a set of quantized <em>angles</em> (φ and ψ),
+        shrinking the report dramatically while keeping enough fidelity to steer accurately.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">👥</span>
+      <h2>From Beamforming to MU-MIMO</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The same steering matrices enable <strong>downlink MU-MIMO</strong>: the AP computes weights
+        that steer a beam <em>toward</em> client A while placing a null <em>at</em> client B (and
+        vice versa), letting it transmit distinct streams to both at once. Accurate, fresh sounding
+        is essential — stale channel info causes inter-user interference and collapses the gains.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#d29922; margin-bottom:4px;">
+            Up Next · Day 26
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            VHT Operation in Multi-AP Networks
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            One AP is simple. Tomorrow: how VHT behaves across a multi-AP ESS — the VHT Operation IE,
+            channel coordination, and coexistence with legacy clients.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

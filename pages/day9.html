@@ -1,0 +1,164 @@
+<!-- Day 9: Beacon Frames Deep Dive -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 09</span>
+      <span class="phase-badge" style="background:rgba(63,185,80,0.15); color:#3fb950; border:1px solid rgba(63,185,80,0.3);">
+        Phase 2 · Management Frames
+      </span>
+    </div>
+    <h1>Beacon Frames<br>Deep Dive</h1>
+    <p>
+      Every access point broadcasts a beacon roughly every 102.4 ms — the heartbeat of a WLAN.
+      Beacons carry the SSID, supported rates, security configuration, channel info, and dozens of
+      Information Elements. Today you'll dissect every field and parse beacons programmatically.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~60 min</span></div>
+      <div class="hero-stat"><span>📡</span><span>Beacon anatomy</span></div>
+      <div class="hero-stat"><span>🧩</span><span>Information Elements</span></div>
+      <div class="hero-stat"><span>🐍</span><span>Scapy beacon parser</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📡</span>
+      <h2>Beacon Frame Structure</h2>
+    </div>
+    <div class="section-card-body">
+      <h3>The Fixed Fields</h3>
+      <p>
+        A beacon is a management frame (Type 0, Subtype 8). After the MAC header, the frame body
+        starts with three <strong>fixed fields</strong> that appear in every beacon:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Timestamp (8 bytes):</strong> The AP's TSF timer in microseconds. Stations sync their clocks to this — critical for power save and channel hopping.</li>
+        <li><strong>Beacon Interval (2 bytes):</strong> Time between beacons in Time Units (1 TU = 1024 µs). Default 100 TU = 102.4 ms.</li>
+        <li><strong>Capability Info (2 bytes):</strong> Bitmask flags — ESS/IBSS, Privacy (WEP-era flag), Short Preamble, Spectrum Management, QoS.</li>
+      </ul>
+
+      <h3>Information Elements (IEs)</h3>
+      <p>
+        After the fixed fields come the tagged parameters — Information Elements. Each IE is
+        TLV-encoded: <code>Element ID (1 byte) + Length (1 byte) + Value (N bytes)</code>.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Common Beacon IEs</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">ID   0  SSID                  Network name (0-32 bytes)
+ID   1  Supported Rates       Basic + supported rates
+ID   3  DS Parameter Set      Current channel
+ID   5  TIM                   Traffic Indication Map (power save)
+ID  32  Power Constraint      802.11h TPC
+ID  45  HT Capabilities       802.11n
+ID  48  RSN                   WPA2/WPA3 security suite
+ID  61  HT Operation          Channel width, secondary channel
+ID 191  VHT Capabilities      802.11ac
+ID 192  VHT Operation         80/160 MHz channel config
+ID 221  Vendor Specific       WPA1, WMM, WPS, vendor extensions
+ID 255  Extension (HE/EHT)    802.11ax/be elements use EID extension</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>Parsing Beacons with Scapy</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Scapy exposes IEs as a linked list of <code>Dot11Elt</code> layers. Walk the chain to
+        extract every element:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">beacon_parser.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, Dot11, Dot11Beacon, Dot11Elt
+
+packets = rdpcap("capture.pcap")
+
+for pkt in packets:
+    if pkt.haslayer(Dot11Beacon):
+        bssid = pkt[Dot11].addr3
+        stats = pkt[Dot11Beacon].network_stats()
+
+        print(f"BSSID:    {bssid}")
+        print(f"SSID:     {stats.get('ssid')}")
+        print(f"Channel:  {stats.get('channel')}")
+        print(f"Rates:    {stats.get('rates')}")
+        print(f"Crypto:   {stats.get('crypto')}")
+
+        # Walk every Information Element manually
+        elt = pkt.getlayer(Dot11Elt)
+        while elt:
+            print(f"  IE {elt.ID:3d}  len={elt.len:3d}  {elt.info[:24]}")
+            elt = elt.payload.getlayer(Dot11Elt)
+        break</code></pre>
+      </div>
+
+      <h3>Beacon Interval Analysis</h3>
+      <p>
+        Measuring actual inter-beacon gaps reveals AP health. Jitter above a few milliseconds
+        signals congestion or an overloaded AP radio:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">beacon_timing.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">times = [float(p.time) for p in packets
+         if p.haslayer(Dot11Beacon) and p[Dot11].addr3 == "aa:bb:cc:dd:ee:ff"]
+
+gaps = [(t2 - t1) * 1000 for t1, t2 in zip(times, times[1:])]
+avg  = sum(gaps) / len(gaps)
+
+print(f"Beacons captured : {len(times)}")
+print(f"Average interval : {avg:.1f} ms (expected ~102.4)")
+print(f"Max jitter       : {max(abs(g - avg) for g in gaps):.1f} ms")</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Beacon Census</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Capture 30 seconds of beacons on your busiest channel and list every unique BSSID with SSID, channel, and security type.</li>
+        <li><strong>Task 2:</strong> Find one hidden SSID (zero-length SSID IE) in your capture. What IEs still fingerprint the AP vendor?</li>
+        <li><strong>Task 3:</strong> Plot beacon intervals for one AP over 60 seconds. Is the jitter under 2 ms?</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#3fb950; margin-bottom:4px;">
+            Up Next · Day 10
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Probe Request &amp; Response Frames
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Beacons are passive discovery. Tomorrow: active scanning — how clients probe for
+            networks, why probe requests leak privacy, and how MAC randomization changed the game.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

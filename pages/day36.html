@@ -1,0 +1,125 @@
+<!-- Day 36: Phase 4 Capstone: OFDMA Efficiency Analysis -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 36</span>
+      <span class="phase-badge" style="background:rgba(163,113,247,0.15); color:#a371f7; border:1px solid rgba(163,113,247,0.3);">
+        Phase 4 · Capstone
+      </span>
+    </div>
+    <h1>Phase 4 Capstone:<br>OFDMA Efficiency Analysis</h1>
+    <p>
+      Nine days of Wi-Fi 6 converge into one experiment. You'll build a simulator that sends the same
+      workload — many small packets from many clients — over legacy OFDM and over OFDMA, then measures
+      the airtime each consumes. The gap <em>is</em> the Wi-Fi 6 efficiency story, quantified.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~90 min</span></div>
+      <div class="hero-stat"><span>📊</span><span>OFDM vs OFDMA</span></div>
+      <div class="hero-stat"><span>⏱️</span><span>Airtime model</span></div>
+      <div class="hero-stat"><span>🐍</span><span>Portfolio project</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎯</span>
+      <h2>The Experiment</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Model N clients each with a small payload. In OFDM, each transmission pays the full overhead
+        (DIFS + backoff + preamble + SIFS + ACK) and they go one at a time. In OFDMA, up to one PPDU's
+        worth of clients share the overhead once. We compute total airtime for both.
+      </p>
+      <div class="callout">
+        <strong>Overhead is fixed per transmission — so amortize it.</strong><br>
+        For tiny packets the overhead dwarfs the payload time. OFDMA's whole value is paying that fixed
+        cost once for many clients instead of once per client. The simulator makes the multiplier obvious.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>The Efficiency Simulator</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">ofdma_sim.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python"># Simplified airtime model (microseconds)
+DIFS      = 34
+SIFS      = 16
+BACKOFF   = 67.5     # avg for AC_BE (CW=15 slots * 9us / 2)
+PREAMBLE  = 40       # HE preamble-ish
+ACK       = 32
+RATE_MBPS = 100      # per-client effective rate on its RU/channel
+
+def tx_time_us(payload_bytes, rate_mbps=RATE_MBPS):
+    return payload_bytes * 8 / rate_mbps    # us
+
+def ofdm_airtime(n_clients, payload):
+    """Each client contends and transmits separately."""
+    per = DIFS + BACKOFF + PREAMBLE + tx_time_us(payload) + SIFS + ACK
+    return n_clients * per
+
+def ofdma_airtime(n_clients, payload, ru_per_ppdu=9):
+    """Clients packed into PPDUs of up to ru_per_ppdu each."""
+    ppdus = -(-n_clients // ru_per_ppdu)     # ceil division
+    # one PPDU pays overhead once; payload time is the max RU's time
+    per_ppdu = DIFS + BACKOFF + PREAMBLE + tx_time_us(payload) + SIFS + ACK
+    return ppdus * per_ppdu
+
+for n in (1, 9, 30, 100):
+    payload = 200                            # small IoT packet
+    a = ofdm_airtime(n, payload)
+    b = ofdma_airtime(n, payload)
+    print(f"{n:3d} clients | OFDM {a:9.0f} us | OFDMA {b:8.0f} us | "
+          f"{a / b:4.1f}x faster")</code></pre>
+      </div>
+      <p style="margin-top:12px;">
+        Run it: with 30 small-packet clients you'll see OFDMA finish several times faster — exactly
+        the "up to 4× efficiency in dense networks" claim, reproduced from first principles.
+      </p>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🏆</span>
+      <h2>Capstone Challenge</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Sweep payload size from 100 B to 1500 B. At what size does OFDMA's advantage shrink, and why?</li>
+        <li><strong>Task 2:</strong> Add per-client rate variation (some slow, some fast). Model how a low-MCS client stretches the whole PPDU (it's as slow as its slowest RU).</li>
+        <li><strong>Task 3:</strong> Plot airtime vs client count for OFDM and OFDMA on the same chart. Push the notebook/script to GitHub with your findings.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">🎉</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#f85149; margin-bottom:4px;">
+            Phase 4 Complete · Up Next Phase 5
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Day 37 — 802.11be Overview &amp; Multi-Link Operation
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            The final phase covers Wi-Fi 7 (802.11be) and the security stack: MLO, WPA3 SAE, ciphers,
+            MFP, attack detection, and a compliance-validation capstone.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

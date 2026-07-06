@@ -1,0 +1,112 @@
+<!-- Day 37: 802.11be Overview & Multi-Link Operation -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 37</span>
+      <span class="phase-badge" style="background:rgba(248,81,73,0.15); color:#f85149; border:1px solid rgba(248,81,73,0.3);">
+        Phase 5 · 802.11be &amp; Security
+      </span>
+    </div>
+    <h1>802.11be Overview<br>&amp; Multi-Link Operation</h1>
+    <p>
+      802.11be (Wi-Fi 7) targets Extremely High Throughput: 320 MHz channels, 4096-QAM, and up to 16
+      spatial streams. But its signature feature is Multi-Link Operation — a device using 2.4, 5, and
+      6 GHz <em>simultaneously</em>. Today we open the final phase.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🚀</span><span>EHT / Wi-Fi 7</span></div>
+      <div class="hero-stat"><span>🔗</span><span>Multi-Link Operation</span></div>
+      <div class="hero-stat"><span>📶</span><span>320 MHz, 4096-QAM</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🚀</span>
+      <h2>The EHT Headline Features</h2>
+    </div>
+    <div class="section-card-body">
+      <ul style="margin: 0 0 0 20px; line-height: 1.8;">
+        <li><strong>320 MHz channels:</strong> double 802.11ax's 160 MHz, practical only in the wide 6 GHz band.</li>
+        <li><strong>4096-QAM (4K-QAM):</strong> 12 bits/symbol (up from 1024-QAM's 10) — ~20% more raw rate at very high SNR.</li>
+        <li><strong>16 spatial streams:</strong> double 802.11ax, mostly for high-end APs.</li>
+        <li><strong>Multi-Link Operation (MLO):</strong> one logical connection spread across multiple bands/links at once.</li>
+        <li><strong>Multi-RU / Preamble Puncturing:</strong> a client can be assigned multiple RUs, and the AP can "puncture" a busy sub-channel out of a wide channel instead of abandoning the whole thing.</li>
+      </ul>
+      <div class="callout">
+        <strong>Preamble puncturing rescues wide channels.</strong><br>
+        In 802.11ax, one busy 20 MHz sub-channel could force an 80 MHz transmission down to 40 or 20.
+        802.11be can "punch a hole" around the interference and still use the remaining sub-channels —
+        keeping most of the bandwidth alive.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔗</span>
+      <h2>Multi-Link Operation (MLO)</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        MLO is the defining Wi-Fi 7 feature. A Multi-Link Device (MLD) has one MAC address at the
+        logical level but multiple radios ("affiliated" links), and it can use them together:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Simultaneous Transmit/Receive (STR):</strong> send on 5 GHz while receiving on 6 GHz — true aggregate throughput.</li>
+        <li><strong>Link aggregation:</strong> a single traffic flow striped across multiple bands for higher total rate.</li>
+        <li><strong>Reliability / failover:</strong> if one band gets congested or hit by interference, traffic shifts to another link seamlessly.</li>
+        <li><strong>Latency:</strong> a low-latency flow can pick whichever link is least loaded right now — huge for gaming, AR/VR.</li>
+      </ul>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">MLO Concept</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">        +-------------------- MLD (one logical device) --------------------+
+        |  Link A: 5 GHz  160 MHz   <-- bulk download                       |
+        |  Link B: 6 GHz  320 MHz   <-- simultaneous, low-latency traffic   |
+        |  Link C: 2.4 GHz          <-- fallback / range                    |
+        +-------------------------------------------------------------------+
+             One association, one security context, three radios working together.</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔒</span>
+      <h2>MLO and Security</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Crucially, MLO establishes a <strong>single security association</strong> across all links —
+        one SAE/4-way handshake protects the whole MLD, with per-link key derivation. This ties
+        directly into the rest of Phase 5: the WPA3 machinery you're about to study is what secures a
+        Wi-Fi 7 multi-link connection just as it does a single-band one.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#f85149; margin-bottom:4px;">
+            Up Next · Day 38
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            WPA3 SAE Handshake Deep Dive
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            We met SAE briefly on Day 11. Tomorrow we go deep: the Dragonfly math, the Password
+            Element, commit/confirm, and why it resists offline dictionary attacks.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,137 @@
+<!-- Day 21: VHT Capabilities & Negotiation -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 21</span>
+      <span class="phase-badge" style="background:rgba(210,153,34,0.15); color:#d29922; border:1px solid rgba(210,153,34,0.3);">
+        Phase 3 · 802.11ac (WiFi 5)
+      </span>
+    </div>
+    <h1>VHT Capabilities<br>&amp; Negotiation</h1>
+    <p>
+      Two 802.11ac devices rarely have identical abilities. The VHT Capabilities Information Element,
+      exchanged in beacons, probes, and association frames, lets them agree on the fastest common
+      configuration. Today we decode it bit by bit.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🤝</span><span>Capability IE</span></div>
+      <div class="hero-stat"><span>🧮</span><span>MCS map</span></div>
+      <div class="hero-stat"><span>🐍</span><span>IE decoder</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤝</span>
+      <h2>The VHT Capabilities IE (ID 191)</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        This IE has two parts: a 4-byte <strong>VHT Capabilities Info</strong> field and an 8-byte
+        <strong>Supported VHT-MCS and NSS Set</strong>. Key fields in the info word:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Max MPDU Length:</strong> 3895 / 7991 / 11454 bytes — bigger frames = less overhead.</li>
+        <li><strong>Supported Channel Width Set:</strong> whether the device does 160 MHz and/or 80+80 MHz.</li>
+        <li><strong>Rx/Tx LDPC:</strong> support for the stronger low-density parity-check coding.</li>
+        <li><strong>Short GI for 80/160 MHz:</strong> 400 ns guard interval support.</li>
+        <li><strong>SU/MU Beamformer &amp; Beamformee:</strong> who can steer beams to whom.</li>
+        <li><strong>Max A-MPDU Length Exponent:</strong> ceiling on aggregation.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🧮</span>
+      <h2>The MCS &amp; NSS Map</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The Supported VHT-MCS Set uses <strong>2 bits per spatial stream</strong> to advertise the
+        highest MCS that stream supports:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Per-SS MCS Encoding</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">2-bit value   Meaning
+  0           MCS 0-7  supported
+  1           MCS 0-8  supported (adds 256-QAM 3/4)
+  2           MCS 0-9  supported (adds 256-QAM 5/6)
+  3           stream NOT supported
+
+Example: a 2x2 client advertises SS1=2, SS2=2, SS3-8=3
+  => "MCS 0-9 on two streams, no streams 3-8"</code></pre>
+      </div>
+      <div class="callout">
+        <strong>Negotiation = intersection.</strong><br>
+        The effective configuration is the <em>minimum</em> of both sides: the narrowest common
+        channel width, the fewest common streams, and the lowest common max MCS. A 4x4 AP talking to
+        a 1x1 phone runs at 1 stream. This is why a fast AP doesn't rescue a cheap client.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>Decoding the Capabilities IE</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">vht_caps.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">import struct
+from scapy.all import rdpcap, Dot11Elt
+
+def parse_vht_caps(info):
+    cap = struct.unpack("&lt;I", info[:4])[0]
+    width = (cap >> 2) & 0x3
+    width_txt = {0: "80 MHz", 1: "160 MHz", 2: "160+80+80 MHz"}.get(width, "?")
+    ldpc = bool(cap & (1 << 4))
+    sgi80 = bool(cap & (1 << 5))
+    su_bf = bool(cap & (1 << 11))
+    print(f"  Channel width : {width_txt}")
+    print(f"  LDPC          : {ldpc}")
+    print(f"  Short GI 80   : {sgi80}")
+    print(f"  SU beamformer : {su_bf}")
+
+for pkt in rdpcap("capture.pcap"):
+    elt = pkt.getlayer(Dot11Elt)
+    while elt:
+        if elt.ID == 191:                  # VHT Capabilities
+            print("VHT Capabilities:")
+            parse_vht_caps(bytes(elt.info))
+            break
+        elt = elt.payload.getlayer(Dot11Elt)</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#d29922; margin-bottom:4px;">
+            Up Next · Day 22
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            MCS, NSS &amp; Data Rate Calculations
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            You can read the capabilities — now compute the number. Tomorrow: the exact formula that
+            turns MCS, streams, bandwidth, and guard interval into a PHY data rate.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

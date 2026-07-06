@@ -1,0 +1,118 @@
+<!-- Day 31: MU-OFDMA & SU-OFDMA Modes -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 31</span>
+      <span class="phase-badge" style="background:rgba(163,113,247,0.15); color:#a371f7; border:1px solid rgba(163,113,247,0.3);">
+        Phase 4 · 802.11ax (WiFi 6)
+      </span>
+    </div>
+    <h1>MU-OFDMA &amp;<br>SU-OFDMA Modes</h1>
+    <p>
+      OFDMA and MU-MIMO are often confused because both serve multiple users. They're orthogonal
+      techniques — one splits the channel in frequency, the other in space — and 802.11ax can combine
+      them. Today we separate the modes cleanly and see when each wins.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🔀</span><span>OFDMA vs MU-MIMO</span></div>
+      <div class="hero-stat"><span>⬇️</span><span>DL &amp; UL</span></div>
+      <div class="hero-stat"><span>🎛️</span><span>Combined modes</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔀</span>
+      <h2>Two Orthogonal Axes</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Frequency vs Space</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">OFDMA   = split the channel in FREQUENCY (different RUs)
+MU-MIMO = split the channel in SPACE     (different spatial streams,
+                                          same frequency, via beamforming)
+
+They are independent. You can do:
+  - OFDMA only            (users on different RUs)
+  - MU-MIMO only          (users on same RU, separated by beams)
+  - OFDMA + MU-MIMO       (multiple users per RU, multiple RUs)</code></pre>
+      </div>
+      <div class="callout">
+        <strong>Rule of thumb: OFDMA for small packets, MU-MIMO for big ones.</strong><br>
+        OFDMA shines when many clients have <em>small</em> payloads (IoT, chat, ACKs) — packing them
+        into RUs kills overhead. MU-MIMO shines when a few clients have <em>large</em> payloads and
+        good SNR — spatial streams multiply throughput. 802.11ax schedulers mix both.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📖</span>
+      <h2>SU-OFDMA vs MU-OFDMA</h2>
+    </div>
+    <div class="section-card-body">
+      <ul style="margin: 0 0 0 20px; line-height: 1.8;">
+        <li><strong>SU-OFDMA:</strong> A single client is assigned one or more RUs in an otherwise multi-user PPDU. It still benefits from the finer RU structure (e.g. avoiding a narrowband interferer by using a clean RU), but only one user is served.</li>
+        <li><strong>MU-OFDMA:</strong> Multiple clients each get their own RU in the same PPDU — the true multi-user case that delivers the density gains.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">⬇️</span>
+      <h2>Downlink vs Uplink OFDMA</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        <strong>Downlink (DL) OFDMA</strong> is straightforward: the AP owns the medium and simply
+        transmits different RUs to different clients in one PPDU. It signals the allocation in HE-SIG-B
+        and everyone decodes their slice.
+      </p>
+      <p>
+        <strong>Uplink (UL) OFDMA</strong> is harder and brand-new in 802.11ax: multiple clients must
+        transmit at the <em>same time</em> on their assigned RUs, arriving at the AP aligned in time,
+        frequency, and power. This is impossible with random access, so the AP uses a
+        <strong>Trigger frame</strong> to command exactly who transmits where — covered on Day 33.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">DL vs UL OFDMA</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">DL-OFDMA:  AP ----[RU1:A][RU2:B][RU3:C]----> A, B, C   (one PPDU)
+
+UL-OFDMA:  AP --[Trigger: A->RU1, B->RU2, C->RU3]-->
+           then A, B, C all transmit at once on their RUs -> AP
+           AP --[Multi-STA Block Ack]--> acknowledges all three</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#a371f7; margin-bottom:4px;">
+            Up Next · Day 32
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Target Wake Time (TWT) for Power Saving
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Efficiency isn't only airtime — it's battery. Tomorrow: how TWT lets devices sleep on a
+            schedule and wake only for their slot, transforming IoT power consumption.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

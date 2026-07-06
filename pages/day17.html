@@ -1,0 +1,136 @@
+<!-- Day 17: Detecting Attacks via Frame Analysis -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 17</span>
+      <span class="phase-badge" style="background:rgba(63,185,80,0.15); color:#3fb950; border:1px solid rgba(63,185,80,0.3);">
+        Phase 2 · Management Frames
+      </span>
+    </div>
+    <h1>Detecting Attacks<br>via Frame Analysis</h1>
+    <p>
+      Management frames are unauthenticated by default, which makes them the raw material for most
+      Wi-Fi attacks. Today we build a detection engine that spots deauth floods, evil twins, MAC
+      spoofing, and rogue APs — the defensive core of a wireless IDS.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~65 min</span></div>
+      <div class="hero-stat"><span>🚨</span><span>WIDS heuristics</span></div>
+      <div class="hero-stat"><span>👯</span><span>Evil twin detection</span></div>
+      <div class="hero-stat"><span>🐍</span><span>Detection engine</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🚨</span>
+      <h2>The Attack Catalog</h2>
+    </div>
+    <div class="section-card-body">
+      <ul style="margin: 0 0 0 20px; line-height: 1.8;">
+        <li><strong>Deauth/Disassoc flood:</strong> Spoofed teardown frames knock clients offline. Signature: high rate of deauth from a BSSID.</li>
+        <li><strong>Evil twin:</strong> A rogue AP clones a legitimate SSID (often the same or spoofed BSSID) to lure clients. Signature: same SSID on unexpected channel, mismatched capabilities, or a new BSSID for a known SSID.</li>
+        <li><strong>MAC spoofing:</strong> An attacker impersonates a client or AP MAC. Signature: sudden change in sequence-number progression or signal strength for a known MAC.</li>
+        <li><strong>Rogue AP:</strong> An unauthorized AP on the corporate wire. Signature: a BSSID not in the approved allowlist beaconing your SSID.</li>
+        <li><strong>Karma / beacon flood:</strong> Responding to every probe / flooding fake SSIDs. Signature: implausible number of distinct SSIDs from one radio.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">👯</span>
+      <h2>Evil Twin &amp; Spoofing Heuristics</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Two powerful signals: an SSID you trust appearing on a <em>new BSSID</em>, and a known BSSID
+        whose <strong>sequence numbers</strong> suddenly jump (802.11 sequence numbers increment
+        monotonically per transmitter — a spoofer's chip starts from its own counter).
+      </p>
+      <div class="callout">
+        <strong>Sequence numbers are a spoofing fingerprint.</strong><br>
+        Each real transmitter increments its 12-bit sequence counter by 1 per frame. If you see the
+        same BSSID emit frames whose sequence numbers move backward or leap by thousands, two radios
+        are using that MAC — a strong spoofing indicator.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>A Minimal Detection Engine</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">wids.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import sniff, Dot11, Dot11Beacon, Dot11Deauth, Dot11Elt
+from collections import defaultdict
+import time
+
+APPROVED = {"corp-wifi": {"aa:bb:cc:00:11:22", "aa:bb:cc:00:11:23"}}
+ssid_to_bssids = defaultdict(set)
+last_seq = {}
+deauth_times = defaultdict(list)
+
+def alert(msg):
+    print(f"🚨 {time.strftime('%H:%M:%S')}  {msg}")
+
+def handle(pkt):
+    if not pkt.haslayer(Dot11):
+        return
+    src = pkt.addr2
+
+    # 1. Deauth flood
+    if pkt.haslayer(Dot11Deauth):
+        now = time.time()
+        deauth_times[src] = [t for t in deauth_times[src] if now - t < 10]
+        deauth_times[src].append(now)
+        if len(deauth_times[src]) > 20:
+            alert(f"Deauth flood from {src}")
+
+    # 2. Rogue / evil-twin AP
+    if pkt.haslayer(Dot11Beacon):
+        ssid = pkt[Dot11Elt].info.decode(errors="ignore").lower()
+        ssid_to_bssids[ssid].add(src)
+        if ssid in APPROVED and src not in APPROVED[ssid]:
+            alert(f"Rogue/evil-twin AP '{ssid}' on unapproved BSSID {src}")
+
+    # 3. MAC spoofing via sequence-number regression
+    seq = pkt.SC >> 4 if pkt.SC is not None else None
+    if seq is not None and src in last_seq:
+        gap = (seq - last_seq[src]) % 4096
+        if gap > 3000:  # large backward-ish jump
+            alert(f"Sequence anomaly for {src} (possible spoofing)")
+    last_seq[src] = seq
+
+sniff(iface="wlan0mon", prn=handle, store=0)</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#3fb950; margin-bottom:4px;">
+            Up Next · Day 18
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Phase 2 Capstone: Full Association Flow
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Time to tie Phase 2 together. Your capstone: a tool that reconstructs a complete
+            connection — probe through 4-way handshake — from a PCAP and flags every anomaly.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

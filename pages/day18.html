@@ -1,0 +1,147 @@
+<!-- Day 18: Phase 2 Capstone: Full Association Flow -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 18</span>
+      <span class="phase-badge" style="background:rgba(63,185,80,0.15); color:#3fb950; border:1px solid rgba(63,185,80,0.3);">
+        Phase 2 · Capstone
+      </span>
+    </div>
+    <h1>Phase 2 Capstone:<br>Full Association Flow</h1>
+    <p>
+      Ten days of management frames converge here. You'll build a tool that ingests a PCAP, follows
+      a single client through the entire connection lifecycle — probe, auth, association, 4-way
+      handshake — reports timing for each stage, and flags anything abnormal.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~90 min</span></div>
+      <div class="hero-stat"><span>🎯</span><span>End-to-end reconstruction</span></div>
+      <div class="hero-stat"><span>📊</span><span>Stage timing</span></div>
+      <div class="hero-stat"><span>🐍</span><span>Portfolio project</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎯</span>
+      <h2>The Complete Connection Timeline</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        A successful WPA2/WPA3 connection is a precise sequence. Your analyzer reconstructs it and
+        times each transition:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Connection Lifecycle</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">1. Probe Request / Response   discovery
+2. Auth (seq 1)               STA -> AP
+3. Auth (seq 2)               AP  -> STA   (status 0)
+4. Assoc Request              STA -> AP
+5. Assoc Response             AP  -> STA   (status 0, AID assigned)
+6. EAPOL 1/4                  AP  -> STA   (ANonce)
+7. EAPOL 2/4                  STA -> AP    (SNonce + MIC)
+8. EAPOL 3/4                  AP  -> STA   (GTK + MIC)
+9. EAPOL 4/4                  STA -> AP    (ACK)
+   -> Data traffic flows (encrypted)</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>The Capstone Analyzer</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">assoc_flow.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, Dot11, Dot11Auth, Dot11AssoReq, \
+    Dot11AssoResp, Dot11ProbeReq, EAPOL
+
+def analyze(pcap, client_mac):
+    stages = []   # (label, time)
+    for pkt in rdpcap(pcap):
+        if not pkt.haslayer(Dot11):
+            continue
+        if client_mac not in (pkt.addr1, pkt.addr2):
+            continue
+        t = float(pkt.time)
+
+        if pkt.haslayer(Dot11ProbeReq):
+            stages.append(("Probe Request", t))
+        elif pkt.haslayer(Dot11Auth):
+            stages.append((f"Auth seq {pkt[Dot11Auth].seqnum}", t))
+        elif pkt.haslayer(Dot11AssoReq):
+            stages.append(("Assoc Request", t))
+        elif pkt.haslayer(Dot11AssoResp):
+            aid = pkt[Dot11AssoResp].AID & 0x3fff
+            stages.append((f"Assoc Response (AID {aid})", t))
+        elif pkt.haslayer(EAPOL):
+            stages.append(("EAPOL handshake msg", t))
+
+    if not stages:
+        print("No frames for that client."); return
+
+    t0 = stages[0][1]
+    print(f"{'Stage':30s} {'t+ms':>8s}")
+    print("-" * 40)
+    for label, t in stages:
+        print(f"{label:30s} {(t - t0) * 1000:8.1f}")
+
+    total = (stages[-1][1] - t0) * 1000
+    print("-" * 40)
+    print(f"{'TOTAL connect time':30s} {total:8.1f} ms")
+
+    eapol = sum(1 for l, _ in stages if l.startswith('EAPOL'))
+    if eapol < 4:
+        print(f"⚠️  Only {eapol}/4 EAPOL messages — incomplete handshake")
+
+if __name__ == "__main__":
+    import sys
+    analyze(sys.argv[1], sys.argv[2])   # python assoc_flow.py cap.pcap aa:bb:..</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🏆</span>
+      <h2>Capstone Challenge</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Run the analyzer against a real capture of your own device connecting. Confirm all 9 stages appear and total time is reasonable (&lt; 1 s).</li>
+        <li><strong>Task 2:</strong> Add anomaly detection: flag a missing auth, a non-zero status code, or a 4-way handshake that never completes.</li>
+        <li><strong>Task 3:</strong> Extend it to summarize <em>all</em> clients in a capture, ranking them by connect time — a mini connection-health dashboard. Push it to GitHub.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">🎉</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#d29922; margin-bottom:4px;">
+            Phase 2 Complete · Up Next Phase 3
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Day 19 — Why 802.11ac Was Revolutionary
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            You've mastered management frames and the connection state machine. Phase 3 shifts to the
+            PHY: 802.11ac (Wi-Fi 5), wider channels, more spatial streams, and gigabit Wi-Fi.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

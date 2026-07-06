@@ -1,0 +1,152 @@
+<!-- Day 16: Building a Connection State Machine Analyzer -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 16</span>
+      <span class="phase-badge" style="background:rgba(63,185,80,0.15); color:#3fb950; border:1px solid rgba(63,185,80,0.3);">
+        Phase 2 · Management Frames
+      </span>
+    </div>
+    <h1>Building a Connection<br>State Machine Analyzer</h1>
+    <p>
+      802.11 defines a strict three-state model for every station. Today we build a tool that tracks
+      each MAC through those states in real time — the same logic a wireless controller uses to
+      police which frames a station is allowed to send.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~70 min</span></div>
+      <div class="hero-stat"><span>🔄</span><span>3-state model</span></div>
+      <div class="hero-stat"><span>🐍</span><span>Live tracker</span></div>
+      <div class="hero-stat"><span>🛠️</span><span>Hands-on build</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔄</span>
+      <h2>The Three-State Model</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Every station relative to an AP is in exactly one of three states. Frame classes gate what's
+        legal in each state:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>State 1 — Unauthenticated, Unassociated:</strong> Only Class 1 frames allowed (beacons, probes, auth, RTS/CTS/ACK).</li>
+        <li><strong>State 2 — Authenticated, Unassociated:</strong> Class 1 + Class 2 (association requests). Reached after successful Auth.</li>
+        <li><strong>State 3 — Authenticated &amp; Associated:</strong> All classes, including Class 3 data frames. This is "connected."</li>
+      </ul>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">State Transitions</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">          Auth success            Assoc success
+State 1 -----------------> State 2 -----------------> State 3
+   ^                          |                          |
+   |     Deauth               |  Deauth                  | Disassoc
+   +--------------------------+--------------------------+
+   |                                                     |
+   +-----------------------------------------------------+
+              (Deauth from any state -> State 1)</code></pre>
+      </div>
+      <div class="callout">
+        <strong>A Class 3 frame in State 1 is a red flag.</strong><br>
+        If a station sends data before associating, the AP responds with a deauth (reason 7). Seeing
+        this pattern in a capture often means injection, spoofing, or a confused client — exactly
+        what our analyzer will surface.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>The State Machine Analyzer</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        This tracker maintains a per-station state and prints every transition as it happens:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">state_analyzer.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import sniff, Dot11
+from scapy.all import (Dot11Auth, Dot11AssoReq, Dot11AssoResp,
+                       Dot11Deauth, Dot11Disas)
+
+# state[mac] = 1 (unauth), 2 (auth), 3 (assoc)
+state = {}
+
+def transition(mac, new, why):
+    old = state.get(mac, 1)
+    if old != new:
+        state[mac] = new
+        print(f"{mac}:  State {old} -> {new}   ({why})")
+
+def handle(pkt):
+    if not pkt.haslayer(Dot11):
+        return
+    sta = pkt.addr2
+
+    if pkt.haslayer(Dot11Auth) and pkt[Dot11Auth].status == 0:
+        transition(sta, 2, "auth success")
+    elif pkt.haslayer(Dot11AssoResp) and pkt[Dot11AssoResp].status == 0:
+        # response is AP->STA; the STA is addr1
+        transition(pkt.addr1, 3, "assoc success")
+    elif pkt.haslayer(Dot11Deauth):
+        transition(pkt.addr1, 1, "deauth")
+        transition(pkt.addr2, 1, "deauth")
+    elif pkt.haslayer(Dot11Disas):
+        # drop to state 2 (still authenticated)
+        for m in (pkt.addr1, pkt.addr2):
+            if state.get(m) == 3:
+                transition(m, 2, "disassoc")
+    elif pkt.type == 2:  # data frame
+        if state.get(sta, 1) < 3:
+            print(f"⚠️  {sta} sent DATA in state {state.get(sta,1)} "
+                  f"(Class 3 violation)")
+
+sniff(iface="wlan0mon", prn=handle, store=0)</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Extend the Analyzer</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Add timestamps and measure how long each station spends in State 2 (auth-to-assoc latency).</li>
+        <li><strong>Task 2:</strong> Track the AID from association responses and print a live table of connected stations.</li>
+        <li><strong>Task 3:</strong> Flag any station that transitions to State 1 more than 3 times per minute — a possible deauth-attack victim.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#3fb950; margin-bottom:4px;">
+            Up Next · Day 17
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Detecting Attacks via Frame Analysis
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Your state machine already catches anomalies. Tomorrow we generalize it into a detection
+            engine for deauth floods, evil twins, spoofing, and rogue APs.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,121 @@
+<!-- Day 33: Multi-User Uplink & MU-EDCA -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 33</span>
+      <span class="phase-badge" style="background:rgba(163,113,247,0.15); color:#a371f7; border:1px solid rgba(163,113,247,0.3);">
+        Phase 4 · 802.11ax (WiFi 6)
+      </span>
+    </div>
+    <h1>Multi-User Uplink<br>&amp; MU-EDCA</h1>
+    <p>
+      Downlink multi-user is easy — the AP controls it. Uplink multi-user is the hard part: getting
+      many clients to transmit simultaneously, aligned in time, frequency, and power. The Trigger
+      frame makes it possible, and MU-EDCA retunes contention for the scheduled era.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~60 min</span></div>
+      <div class="hero-stat"><span>🎯</span><span>Trigger frame</span></div>
+      <div class="hero-stat"><span>⬆️</span><span>UL MU coordination</span></div>
+      <div class="hero-stat"><span>⚖️</span><span>MU-EDCA</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎯</span>
+      <h2>The Trigger Frame</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        A <strong>Trigger frame</strong> is the AP's command that orchestrates uplink multi-user
+        transmission. It's addressed to a set of clients and tells each one precisely how to transmit:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Per-user RU allocation:</strong> which Resource Unit each client uses.</li>
+        <li><strong>MCS &amp; coding:</strong> the rate each client must use.</li>
+        <li><strong>Target RSSI / power control:</strong> how much power each client should transmit at so all signals arrive at the AP at similar strength.</li>
+        <li><strong>Trigger type:</strong> Basic, Beamforming Report Poll, MU-BAR, MU-RTS, etc.</li>
+      </ul>
+      <div class="callout">
+        <strong>Power alignment is the secret sauce.</strong><br>
+        If a near client blasts and a far client whispers, the loud one drowns the quiet one at the
+        AP receiver. The Trigger frame's target-RSSI field tells each client how hard to transmit so
+        all uplink RUs arrive at comparable power — essential for the AP to decode them together.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">⬆️</span>
+      <h2>The Uplink MU Sequence</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Trigger-Based Uplink</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">AP  -> ALL   Trigger frame
+               A: RU1, MCS4, tgtRSSI -55
+               B: RU2, MCS2, tgtRSSI -55
+               C: RU3, MCS6, tgtRSSI -55
+
+  ... SIFS ...
+
+A,B,C -> AP   HE TB PPDU  (all transmit simultaneously on their RUs)
+
+  ... SIFS ...
+
+AP  -> ALL   Multi-STA Block Ack  (acknowledges A, B, C at once)</code></pre>
+      </div>
+      <p style="margin-top:12px;">
+        This turns what used to be three separate contention-and-transmit cycles into one coordinated
+        exchange — the uplink counterpart to downlink OFDMA.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">⚖️</span>
+      <h2>MU-EDCA: Contention for the MU Era</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Classic EDCA (from 802.11e) governs how clients contend for the channel using per-access-category
+        backoff. In Wi-Fi 6, the AP wants clients to prefer <em>waiting for a Trigger</em> rather than
+        contending on their own — otherwise scheduled uplink and random uplink collide.
+      </p>
+      <p>
+        <strong>MU-EDCA</strong> provides a second set of EDCA parameters that the AP pushes to clients
+        after they've participated in trigger-based access. These parameters use larger contention
+        windows, making random channel access <em>less</em> attractive and nudging clients to rely on
+        the AP's schedule. It's a gentle traffic-shaping mechanism that keeps the scheduled and random
+        worlds from fighting.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#a371f7; margin-bottom:4px;">
+            Up Next · Day 34
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            HE Operation &amp; BSS Color
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Dense networks waste time deferring to neighbors. Tomorrow: BSS coloring and spatial reuse
+            — how a device learns to ignore other networks' frames and transmit sooner.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

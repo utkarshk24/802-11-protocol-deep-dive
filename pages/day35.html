@@ -1,0 +1,135 @@
+<!-- Day 35: OFDMA Scheduling & Fairness -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 35</span>
+      <span class="phase-badge" style="background:rgba(163,113,247,0.15); color:#a371f7; border:1px solid rgba(163,113,247,0.3);">
+        Phase 4 · 802.11ax (WiFi 6)
+      </span>
+    </div>
+    <h1>OFDMA Scheduling<br>&amp; Fairness</h1>
+    <p>
+      OFDMA hands the AP enormous power: it decides who transmits, on which RU, at what rate, every
+      few milliseconds. That power comes with a hard problem — balancing raw efficiency against
+      fairness. Today we reason about scheduling strategies and their trade-offs.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🧠</span><span>Scheduler logic</span></div>
+      <div class="hero-stat"><span>⚖️</span><span>Fairness models</span></div>
+      <div class="hero-stat"><span>🐍</span><span>Toy scheduler</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🧠</span>
+      <h2>What the Scheduler Must Decide</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Every transmission opportunity, the AP answers several coupled questions:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Which clients</strong> have queued traffic (DL) or want to send (UL, learned via buffer-status reports)?</li>
+        <li><strong>What RU sizes</strong> to carve — many small RUs for many clients, or a few big ones?</li>
+        <li><strong>Which client on which RU</strong>, considering each client's channel quality on that part of the band (frequency-selective fading means a client may be better on one RU than another).</li>
+        <li><strong>What MCS</strong> per client, from their channel feedback.</li>
+      </ul>
+      <p>The scheduler is proprietary — the standard defines the <em>mechanism</em> (RUs, triggers), vendors compete on the <em>policy</em>.</p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">⚖️</span>
+      <h2>Three Classic Fairness Models</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Scheduling Strategies</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Max Throughput   Always serve the client with the best channel.
+                 -> Highest aggregate rate, but starves weak clients.
+
+Equal Airtime    Give every client the same time on the medium.
+                 -> Fair, but slow clients drag total throughput down.
+
+Proportional     Weight by (achievable rate / recent throughput).
+Fair             -> Balances the two: good clients get more, but
+                    weak clients aren't starved. Common default.</code></pre>
+      </div>
+      <div class="callout">
+        <strong>The airtime-fairness insight.</strong><br>
+        Rate fairness (equal Mbps) forces the AP to spend disproportionate <em>time</em> on slow
+        clients, which throttles everyone. Airtime fairness (equal time) is usually the healthier goal
+        in mixed networks: fast clients finish quickly and free the medium.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>A Toy Proportional-Fair Scheduler</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">pf_scheduler.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">class Client:
+    def __init__(self, name, rate):
+        self.name = name
+        self.rate = rate          # achievable Mbps this slot
+        self.avg  = 1.0           # smoothed recent throughput
+
+def proportional_fair(clients, n_rus, alpha=0.1):
+    """Assign n_rus RUs to the clients with highest rate/avg metric."""
+    ranked = sorted(clients, key=lambda c: c.rate / c.avg, reverse=True)
+    winners = ranked[:n_rus]
+
+    for c in clients:
+        served = c in winners
+        got = c.rate if served else 0.0
+        # exponential moving average of delivered throughput
+        c.avg = (1 - alpha) * c.avg + alpha * got
+    return [c.name for c in winners]
+
+clients = [Client("fast", 600), Client("mid", 200), Client("slow", 30)]
+for slot in range(5):
+    print(f"slot {slot}: serve {proportional_fair(clients, n_rus=2)}")</code></pre>
+      </div>
+      <p style="margin-top:12px;">
+        Watch how the metric <code>rate/avg</code> lets the slow client occasionally win an RU even
+        though its rate is low — its <code>avg</code> stays small, so its priority rises over time.
+        That's proportional fairness in miniature.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#a371f7; margin-bottom:4px;">
+            Up Next · Day 36
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Phase 4 Capstone: OFDMA Efficiency Analysis
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Tie Phase 4 together: build a simulator that compares OFDM vs OFDMA airtime for a mix of
+            clients and quantifies Wi-Fi 6's efficiency gain.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

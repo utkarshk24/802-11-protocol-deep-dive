@@ -1,0 +1,134 @@
+<!-- Day 15: Action Frames & Channel Switching -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 15</span>
+      <span class="phase-badge" style="background:rgba(63,185,80,0.15); color:#3fb950; border:1px solid rgba(63,185,80,0.3);">
+        Phase 2 · Management Frames
+      </span>
+    </div>
+    <h1>Action Frames &amp;<br>Channel Switching</h1>
+    <p>
+      Action frames (Subtype 13) are 802.11's extensibility mechanism — a whole ecosystem of
+      management operations grouped into categories. Today we map the important ones: Block Ack,
+      Radio Measurement, Spectrum Management, and the Channel Switch Announcement.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🎬</span><span>Action categories</span></div>
+      <div class="hero-stat"><span>📻</span><span>Channel switch</span></div>
+      <div class="hero-stat"><span>📊</span><span>Radio measurement</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎬</span>
+      <h2>The Action Frame Model</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Every Action frame body starts with a <strong>Category</strong> byte, then an
+        <strong>Action</strong> byte, then category-specific fields. This TLV-ish design let the IEEE
+        add features across amendments without new frame subtypes.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Key Action Categories</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text"> 0  Spectrum Management   TPC, Channel Switch Announcement (802.11h)
+ 1  QoS                   ADDTS / DELTS traffic streams
+ 3  Block Ack             ADDBA / DELBA aggregation setup
+ 5  Radio Measurement     802.11k neighbor reports, beacon requests
+ 6  Fast BSS Transition   802.11r FT action
+ 7  HT                    802.11n notify channel width, SM power save
+10  WNM                   802.11v BSS Transition Management
+21  VHT                   802.11ac group ID, operating mode notify
+126 Vendor Specific       vendor extensions</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📻</span>
+      <h2>Channel Switch Announcement (CSA)</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        When an AP must move channels — typically because <strong>DFS</strong> radar was detected on
+        a 5 GHz channel — it can't just vanish. It broadcasts a <strong>Channel Switch Announcement</strong>
+        (in beacons and as a Spectrum Management action frame) telling every associated station:
+        "switch to channel X in N beacon intervals."
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Channel Switch Mode:</strong> 1 = stop transmitting until the switch (radar safety).</li>
+        <li><strong>New Channel Number:</strong> where everyone is moving.</li>
+        <li><strong>Channel Switch Count:</strong> beacons remaining before the switch happens — lets stations follow without disconnecting.</li>
+      </ul>
+      <div class="callout">
+        <strong>DFS makes CSA mandatory.</strong><br>
+        On DFS channels (many of the 5 GHz U-NII-2 range), APs must vacate within seconds of
+        detecting radar. CSA is what makes that graceful instead of dropping every client. If you've
+        seen a Wi-Fi network briefly stutter and continue, you likely witnessed a DFS-triggered CSA.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📊</span>
+      <h2>802.11k Radio Measurement</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Radio Measurement action frames let an AP ask a station to report on its RF environment —
+        neighbor APs, channel load, noise histograms. The <strong>Neighbor Report</strong> is the
+        big one: it hands the client a curated list of roam candidates so it doesn't have to scan
+        every channel blindly, dramatically speeding up roaming decisions.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">action_classifier.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, Dot11
+
+CATEGORY = {0: "Spectrum Mgmt", 1: "QoS", 3: "Block Ack",
+            5: "Radio Measurement", 6: "FT", 10: "WNM", 21: "VHT"}
+
+for pkt in rdpcap("capture.pcap"):
+    # Action frames: type=0 (mgmt), subtype=13
+    if pkt.haslayer(Dot11) and pkt.type == 0 and pkt.subtype == 13:
+        body = bytes(pkt[Dot11].payload)
+        if body:
+            cat = body[0]
+            print(f"{pkt.addr2} -> {pkt.addr1}  "
+                  f"Action category={CATEGORY.get(cat, cat)}")</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#3fb950; margin-bottom:4px;">
+            Up Next · Day 16
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Building a Connection State Machine Analyzer
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            You now know every management frame. Tomorrow we combine them into a tool that tracks each
+            station through the full state machine: unauthenticated → authenticated → associated.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

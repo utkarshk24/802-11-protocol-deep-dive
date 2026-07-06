@@ -1,0 +1,125 @@
+<!-- Day 13: Reassociation for Roaming (FT vs Non-FT) -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 13</span>
+      <span class="phase-badge" style="background:rgba(63,185,80,0.15); color:#3fb950; border:1px solid rgba(63,185,80,0.3);">
+        Phase 2 · Management Frames
+      </span>
+    </div>
+    <h1>Reassociation for Roaming<br>(FT vs Non-FT)</h1>
+    <p>
+      Move across a building and your device hops between APs. Reassociation is how a station tells
+      a new AP "I'm coming from another AP in this ESS." Today: the reassociation frame, the roaming
+      decision, and how 802.11r slashes handoff latency for voice and video.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~65 min</span></div>
+      <div class="hero-stat"><span>🏃</span><span>Roaming mechanics</span></div>
+      <div class="hero-stat"><span>⚡</span><span>802.11r Fast Transition</span></div>
+      <div class="hero-stat"><span>📞</span><span>Voice-grade handoff</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🏃</span>
+      <h2>Reassociation vs Association</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        A <strong>Reassociation Request</strong> (Subtype 2) is nearly identical to an association
+        request but adds one crucial field: the <strong>Current AP Address</strong> (the BSSID the
+        station is roaming <em>from</em>). This lets the new AP coordinate with the old AP to move
+        buffered frames and tear down the old association.
+      </p>
+      <div class="callout">
+        <strong>The client decides when to roam — not the AP.</strong><br>
+        802.11 has no standard "you must leave" command (802.11v BSS Transition Management only
+        <em>suggests</em>). Each client's driver uses its own logic: RSSI thresholds, retry rates,
+        and load. Aggressive roaming means flapping; lazy roaming means "sticky client" problems.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐢</span>
+      <h2>Non-FT Roaming: The Slow Path</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Without Fast Transition, roaming to a WPA2-Enterprise AP means repeating the entire join,
+        including a full 802.1X/EAP exchange with the RADIUS server:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Non-FT Roam (WPA2-Enterprise)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Probe        ~10 ms
+Open Auth    ~2  ms
+Reassoc      ~2  ms
+802.1X/EAP   200-700 ms   <-- full RADIUS round trips
+4-way HS     ~20 ms
+--------------------------
+TOTAL        250-750 ms   <-- calls drop, video stutters</code></pre>
+      </div>
+      <p>
+        Anything over ~150 ms is audible on a VoIP call. That gap is exactly what 802.11r fixes.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">⚡</span>
+      <h2>802.11r Fast BSS Transition</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Fast Transition (FT) pre-distributes key material across the mobility domain so the expensive
+        802.1X exchange happens <em>once</em>, at first connect. On every subsequent roam, keys are
+        derived from a cached PMK-R0/PMK-R1 hierarchy — no RADIUS round trip.
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Over-the-air FT:</strong> The station does the FT 4-way handshake directly with the target AP inside the Auth (alg=2) and Reassociation frames.</li>
+        <li><strong>Over-the-DS FT:</strong> The station talks to the target AP <em>through</em> its current AP over the distribution system, then reassociates.</li>
+        <li><strong>MDIE &amp; FTIE:</strong> The Mobility Domain IE and Fast Transition IE carry the key context and nonces that make this possible.</li>
+      </ul>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">FT Roam</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Auth (alg=2, FT)   carries MDIE + FTIE + nonce
+Reassoc Req        carries FTIE with MIC
+Reassoc Resp       keys installed
+--------------------------
+TOTAL              < 50 ms   <-- seamless voice roaming</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#3fb950; margin-bottom:4px;">
+            Up Next · Day 14
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Disassociation &amp; Deauthentication Frames
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            How connections end — gracefully or maliciously. Tomorrow: deauth/disassoc reason codes
+            and the classic deauth flood attack that unprotected management frames enable.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

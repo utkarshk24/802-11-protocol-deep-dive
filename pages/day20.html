@@ -1,0 +1,134 @@
+<!-- Day 20: VHT PPDU Structure & PLCP Headers -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 20</span>
+      <span class="phase-badge" style="background:rgba(210,153,34,0.15); color:#d29922; border:1px solid rgba(210,153,34,0.3);">
+        Phase 3 · 802.11ac (WiFi 5)
+      </span>
+    </div>
+    <h1>VHT PPDU Structure<br>&amp; PLCP Headers</h1>
+    <p>
+      Before a receiver can decode the MAC frame, it must parse the PHY preamble. The VHT PPDU
+      carries training fields and two signal fields — VHT-SIG-A and VHT-SIG-B — that tell the radio
+      the bandwidth, MCS, streams, and coding. Today we walk the whole preamble.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~60 min</span></div>
+      <div class="hero-stat"><span>🧱</span><span>PPDU anatomy</span></div>
+      <div class="hero-stat"><span>📻</span><span>VHT-SIG-A / B</span></div>
+      <div class="hero-stat"><span>🔄</span><span>Backward compat</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🧱</span>
+      <h2>The VHT PPDU Layout</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        A PPDU (PLCP Protocol Data Unit) is the complete over-the-air frame. The VHT format begins
+        with <em>legacy</em> fields so older 802.11a/n devices can at least detect the frame and defer:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">VHT PPDU Fields (in order)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">L-STF     Legacy Short Training Field   AGC, timing sync
+L-LTF     Legacy Long Training Field    channel estimation (legacy)
+L-SIG     Legacy Signal Field           rate+length so legacy defers
+VHT-SIG-A Signal A (2 symbols)          BW, STBC, Group ID, NSS, coding, MCS...
+VHT-STF   Short Training Field          AGC for MIMO
+VHT-LTF   Long Training Fields (1/NSS)  MIMO channel estimation
+VHT-SIG-B Signal B                      per-user length + MCS (esp. MU-MIMO)
+Data      PSDU                          the actual MAC frame(s)</code></pre>
+      </div>
+      <div class="callout">
+        <strong>Why the legacy preamble?</strong><br>
+        L-STF/L-LTF/L-SIG let 802.11a/n devices — which can't decode VHT — still read the L-SIG
+        duration and set their NAV, avoiding collisions. This "spoofing" of a legacy header is how
+        802.11ac stays a good neighbor in mixed networks.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📻</span>
+      <h2>VHT-SIG-A: The Rate Descriptor</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        VHT-SIG-A is two OFDM symbols carrying the parameters the receiver needs to configure its
+        demodulator:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>BW (2 bits):</strong> 0=20, 1=40, 2=80, 3=160/80+80 MHz.</li>
+        <li><strong>STBC (1 bit):</strong> space-time block coding on/off.</li>
+        <li><strong>Group ID (6 bits):</strong> 0 or 63 = single-user (SU); 1–62 = MU-MIMO group.</li>
+        <li><strong>NSTS / Partial AID:</strong> number of space-time streams (SU) or per-user stream allocation (MU).</li>
+        <li><strong>Short GI (1 bit):</strong> 800 ns vs 400 ns guard interval.</li>
+        <li><strong>Coding + MCS (SU):</strong> BCC vs LDPC, and the modulation-and-coding-scheme index 0–9.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🧩</span>
+      <h2>VHT-SIG-B: Per-User Detail</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        In single-user frames, VHT-SIG-B mainly carries the payload length. Its real power shows in
+        <strong>MU-MIMO</strong>: it delivers each user's individual length and MCS so several
+        clients can be served in one PPDU. This is the field that makes multi-user downlink work.
+      </p>
+      <p>
+        With <strong>radiotap</strong> headers on a monitor-mode capture, most of these VHT
+        parameters are surfaced so you can read them without demodulating the RF yourself:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">vht_radiotap.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, RadioTap
+
+for pkt in rdpcap("vht_capture.pcap"):
+    if pkt.haslayer(RadioTap):
+        rt = pkt[RadioTap]
+        # field names vary by scapy version / driver
+        for f in ("ChannelFrequency", "MCS_index", "bandwidth",
+                  "dBm_AntSignal"):
+            if hasattr(rt, f):
+                print(f"{f:18s} = {getattr(rt, f)}")
+        print("-" * 30)</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#d29922; margin-bottom:4px;">
+            Up Next · Day 21
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            VHT Capabilities &amp; Negotiation
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            The VHT-SIG fields describe one frame; the VHT Capabilities IE describes what a device can
+            do. Tomorrow: how AP and client negotiate the fastest common configuration.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

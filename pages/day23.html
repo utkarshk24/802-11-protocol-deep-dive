@@ -1,0 +1,122 @@
+<!-- Day 23: STBC, LDPC & Spatial Streams -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 23</span>
+      <span class="phase-badge" style="background:rgba(210,153,34,0.15); color:#d29922; border:1px solid rgba(210,153,34,0.3);">
+        Phase 3 · 802.11ac (WiFi 5)
+      </span>
+    </div>
+    <h1>STBC, LDPC &amp;<br>Spatial Streams</h1>
+    <p>
+      MIMO isn't only about speed — it's also about reliability. Today we separate three ideas that
+      get conflated: spatial multiplexing (more streams = more speed), STBC (diversity for range),
+      and LDPC (stronger error-correcting code). Each trades throughput against robustness differently.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🌀</span><span>Spatial streams</span></div>
+      <div class="hero-stat"><span>🛡️</span><span>STBC diversity</span></div>
+      <div class="hero-stat"><span>🧬</span><span>LDPC coding</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🌀</span>
+      <h2>Spatial Streams &amp; MIMO</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        <strong>Spatial multiplexing</strong> sends independent data streams over multiple antennas
+        at the same time and frequency. The receiver, using multiple antennas and channel estimates
+        from the VHT-LTF fields, mathematically separates them. N streams ≈ N× the data rate — as
+        long as the channel is "rich" (lots of multipath) and SNR is high.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">MIMO Notation</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">"4x4:3"  =  4 TX antennas  ×  4 RX antennas  :  3 spatial streams
+
+Antennas >= streams (extra antennas improve SNR / diversity).
+Effective streams = min(TX streams, RX streams, channel rank).</code></pre>
+      </div>
+      <div class="callout">
+        <strong>More antennas than streams is deliberate.</strong><br>
+        A 4x4:3 radio uses its 4th antenna for diversity and beamforming gain, not a 4th stream. Extra
+        receive chains raise SNR, which lets the link hold a higher MCS — sometimes worth more than
+        another stream.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🛡️</span>
+      <h2>STBC — Trading Streams for Range</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        <strong>Space-Time Block Coding</strong> does the opposite of spatial multiplexing: it sends
+        the <em>same</em> data across multiple antennas with a clever time/space encoding. You don't
+        gain speed — you gain <strong>diversity</strong>, so the signal survives fading and reaches
+        farther. STBC is a range/reliability tool for cell-edge clients, signaled by 1 bit in VHT-SIG-A.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🧬</span>
+      <h2>LDPC vs BCC Coding</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        802.11ac supports two forward-error-correction codes:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>BCC (Binary Convolutional Coding):</strong> Mandatory, simpler, lower latency, less silicon.</li>
+        <li><strong>LDPC (Low-Density Parity-Check):</strong> Optional, ~1.5–2 dB coding gain — meaning it decodes correctly at lower SNR. That gain translates to either more range at a given rate or a higher rate at a given range.</li>
+      </ul>
+      <p>
+        Both AP and client must support LDPC (advertised in the VHT Capabilities IE) to use it. When
+        they do, marginal links get noticeably more robust for essentially free.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Reliability Toolbox Summary</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Technique       Gives you            Costs you
+Spatial mux     more throughput      needs high SNR + rich channel
+STBC            more range/diversity no throughput gain
+LDPC            ~1.5-2 dB SNR margin  more decoder complexity
+Beamforming     focused SNR gain     sounding overhead (Day 25)</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#d29922; margin-bottom:4px;">
+            Up Next · Day 24
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            80 MHz &amp; 160 MHz Channels
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Wide channels are 802.11ac's biggest speed lever — and its biggest planning headache.
+            Tomorrow: channel bonding, the primary/secondary structure, and why 160 MHz is hard.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

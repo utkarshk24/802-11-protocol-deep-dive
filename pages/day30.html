@@ -1,0 +1,127 @@
+<!-- Day 30: Resource Units & Subcarrier Allocation -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Day 30</span>
+      <span class="phase-badge" style="background:rgba(163,113,247,0.15); color:#a371f7; border:1px solid rgba(163,113,247,0.3);">
+        Phase 4 · 802.11ax (WiFi 6)
+      </span>
+    </div>
+    <h1>Resource Units &amp;<br>Subcarrier Allocation</h1>
+    <p>
+      A Resource Unit is a block of OFDM subcarriers — the atomic slice OFDMA hands to a client.
+      802.11ax defines RU sizes from 26 tones up to 996 tones, and a fixed set of ways they tile a
+      channel. Today we map every RU size and how the AP allocates them.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~60 min</span></div>
+      <div class="hero-stat"><span>🧩</span><span>RU sizes</span></div>
+      <div class="hero-stat"><span>📐</span><span>Tone plans</span></div>
+      <div class="hero-stat"><span>🎛️</span><span>Allocation</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🧩</span>
+      <h2>RU Sizes &amp; Client Capacity</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        802.11ax uses a finer subcarrier spacing (78.125 kHz, ¼ of legacy) so a 20 MHz channel holds
+        <strong>256 tones</strong> instead of 64. RUs are defined by tone count:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">RU Sizes and Max Clients per Channel</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">RU size   ~bandwidth   Max RUs (clients) per channel width
+                        20MHz  40MHz  80MHz  160MHz
+26-tone   ~2 MHz          9     18     37     74
+52-tone   ~4 MHz          4      8     16     32
+106-tone  ~8 MHz          2      4      8     16
+242-tone  full 20 MHz     1      2      4      8
+484-tone  full 40 MHz     -      1      2      4
+996-tone  full 80 MHz     -      -      1      2
+2x996     full 160 MHz    -      -      -      1</code></pre>
+      </div>
+      <p style="margin-top:12px;">
+        So a single 80 MHz channel can serve up to <strong>37 clients simultaneously</strong> with
+        26-tone RUs — perfect for many small IoT flows — or one client with a 996-tone RU for max speed.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📐</span>
+      <h2>Tone Plans &amp; the RU Tree</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        RUs can't be placed arbitrarily — the standard defines a fixed <strong>tone plan</strong> per
+        channel width. Think of it as a binary tree: a 20 MHz channel is one 242-RU, which can split
+        into two 106-RUs, each into 52-RUs, each into 26-RUs. The AP picks a valid partition and
+        publishes it in HE-SIG-B.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">20 MHz Tone Plan (one valid split)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">                  [ 242-tone RU ]
+                  /              \
+          [106-tone]              [106-tone]
+          /    |   \              /    |    \
+       [52] [26] [52]         [52]  [26]  [52]
+        (a null/center 26-tone often reserved near DC)
+
+AP can serve, e.g.:  one 106 (fast client) + four 26 (IoT) in 20 MHz.</code></pre>
+      </div>
+      <div class="callout">
+        <strong>RU size is a speed/sharing dial.</strong><br>
+        Small RUs = many clients, low per-client rate. Large RUs = few clients, high per-client rate.
+        The scheduler balances these per transmission based on who has traffic and how much.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎛️</span>
+      <h2>Who Allocates RUs?</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The <strong>AP is the scheduler</strong>. For downlink OFDMA it decides the RU partition and
+        which client owns each RU. For uplink OFDMA it sends a <strong>Trigger frame</strong> (Day 33)
+        that assigns each client an RU, MCS, and transmit power, so their uplink transmissions arrive
+        aligned and non-overlapping. This centralized scheduling is the discipline that replaces pure
+        random contention.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#a371f7; margin-bottom:4px;">
+            Up Next · Day 31
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            MU-OFDMA &amp; SU-OFDMA Modes
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            RUs in hand, we look at the operating modes: single-user OFDMA vs true multi-user OFDMA,
+            and how they combine with MU-MIMO.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
