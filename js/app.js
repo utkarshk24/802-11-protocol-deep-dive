@@ -2,7 +2,7 @@
 //  app.js — Sidebar builder, content loader, copy buttons
 // ============================================================
 
-// ---- Course start date (Day 1 launch) ----------------------
+// ---- Course start date (Lesson 1 launch) -------------------
 const COURSE_START_DATE = '2026-04-01'; // YYYY-MM-DD, local time (all 45 days unlocked)
 
 function getAvailableDayCount() {
@@ -96,7 +96,7 @@ function setActiveDay(dayNum) {
 function trackDayView(dayNum, meta) {
   if (typeof gtag !== 'function') return; // silently skip on localhost
 
-  const pageTitle = `Day ${dayNum} — ${meta.title}`;
+  const pageTitle = `Lesson ${dayNum} — ${meta.title}`;
   const pagePath  = `/?day=${dayNum}`;
 
   // 1. Virtual page view — appears in GA4 Pages & screens report
@@ -132,7 +132,7 @@ async function loadDay(dayNum) {
   const topTitle = document.getElementById('top-bar-title');
 
   const meta = findDay(dayNum);
-  if (!meta) return showError('Day not found.', content);
+  if (!meta) return showError('Lesson not found.', content);
 
   // Update URL + sidebar active state
   setQueryDay(dayNum);
@@ -140,7 +140,7 @@ async function loadDay(dayNum) {
 
   if (!isDayAvailable(meta)) {
     showComingSoon(meta, content);
-    if (topTitle) topTitle.textContent = `Day ${dayNum} — Coming Soon`;
+    if (topTitle) topTitle.textContent = `Lesson ${dayNum} — Coming Soon`;
     trackDayView(dayNum, meta);
     closeMobileSidebar();
     return;
@@ -150,7 +150,7 @@ async function loadDay(dayNum) {
   content.innerHTML = `
     <div class="loading-spinner">
       <div class="spinner"></div>
-      <p>Loading Day ${dayNum}…</p>
+      <p>Loading Lesson ${dayNum}…</p>
     </div>`;
 
   try {
@@ -166,7 +166,7 @@ async function loadDay(dayNum) {
     wireCopyButtons();
 
     // Update top bar title
-    if (topTitle) topTitle.textContent = `Day ${dayNum} — ${meta.title}`;
+    if (topTitle) topTitle.textContent = `Lesson ${dayNum} — ${meta.title}`;
 
     // Track in GA4
     trackDayView(dayNum, meta);
@@ -175,7 +175,7 @@ async function loadDay(dayNum) {
     content.scrollTop = 0;
 
   } catch (e) {
-    showError(`Could not load Day ${dayNum} content. (${e.message})`, content);
+    showError(`Could not load Lesson ${dayNum} content. (${e.message})`, content);
   }
 
   closeMobileSidebar();
@@ -187,7 +187,7 @@ function showComingSoon(meta, container) {
     <div class="day-content">
       <div class="day-hero" style="text-align:center; padding: 60px 40px;">
         <div style="font-size:56px; margin-bottom:16px;">🔒</div>
-        <h1 style="color:#e6edf3; margin-bottom:8px;">Day ${meta.day} Coming Soon</h1>
+        <h1 style="color:#e6edf3; margin-bottom:8px;">Lesson ${meta.day} Coming Soon</h1>
         <p style="color:#8b949e; max-width:480px; margin: 0 auto 24px;">
           <strong style="color:${meta.phaseData.color}">${meta.title}</strong> is part of
           <em>Phase ${meta.phaseData.phase}: ${meta.phaseData.title}</em>.
@@ -267,7 +267,7 @@ function updateProgress(dayNum) {
   const fill = document.getElementById('progress-fill');
   const text = document.getElementById('progress-text');
   if (fill) fill.style.width = pct + '%';
-  if (text) text.textContent = `${available} / ${total} days`;
+  if (text) text.textContent = `${available} / ${total} lessons`;
 }
 
 // ---- Boot --------------------------------------------------

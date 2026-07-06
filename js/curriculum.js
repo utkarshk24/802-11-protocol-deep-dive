@@ -6,7 +6,7 @@ const CURRICULUM = [
   {
     phase: 1,
     title: "Radio Fundamentals",
-    subtitle: "Days 1–8",
+    subtitle: "Lessons 1–8",
     color: "#58a6ff",
     cssVar: "var(--phase1)",
     days: [
@@ -23,7 +23,7 @@ const CURRICULUM = [
   {
     phase: 2,
     title: "Management Frames",
-    subtitle: "Days 9–18",
+    subtitle: "Lessons 9–18",
     color: "#3fb950",
     cssVar: "var(--phase2)",
     days: [
@@ -42,7 +42,7 @@ const CURRICULUM = [
   {
     phase: 3,
     title: "802.11ac (WiFi 5)",
-    subtitle: "Days 19–27",
+    subtitle: "Lessons 19–27",
     color: "#d29922",
     cssVar: "var(--phase3)",
     days: [
@@ -60,7 +60,7 @@ const CURRICULUM = [
   {
     phase: 4,
     title: "802.11ax (WiFi 6)",
-    subtitle: "Days 28–36",
+    subtitle: "Lessons 28–36",
     color: "#a371f7",
     cssVar: "var(--phase4)",
     days: [
@@ -78,7 +78,7 @@ const CURRICULUM = [
   {
     phase: 5,
     title: "802.11be & Security",
-    subtitle: "Days 37–45",
+    subtitle: "Lessons 37–45",
     color: "#f85149",
     cssVar: "var(--phase5)",
     days: [

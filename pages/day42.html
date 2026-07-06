@@ -1,8 +1,8 @@
-<!-- Day 42: Management Frame Protection (MFP) -->
+<!-- Lesson 42: Management Frame Protection (MFP) -->
 <div class="day-content">
   <div class="day-hero">
     <div class="day-hero-meta">
-      <span class="day-number-badge">Day 42</span>
+      <span class="day-number-badge">Lesson 42</span>
       <span class="phase-badge" style="background:rgba(248,81,73,0.15); color:#f85149; border:1px solid rgba(248,81,73,0.3);">
         Phase 5 · 802.11be &amp; Security
       </span>
@@ -10,7 +10,7 @@
     <h1>Management Frame<br>Protection (MFP)</h1>
     <p>
       Encrypting data frames while leaving management frames unauthenticated is exactly why deauth
-      floods work (Day 14). 802.11w Management Frame Protection closes that gap — and WPA3 makes it
+      floods work (Lesson 14). 802.11w Management Frame Protection closes that gap — and WPA3 makes it
       mandatory. Today: protected robust management frames, BIP, and the SA Query.
     </p>
     <div class="day-hero-footer">
@@ -44,7 +44,7 @@
         <strong>Beacons and probe responses are NOT protected.</strong><br>
         MFP covers deauth/disassoc/robust-action, not discovery frames. Beacons stay open so new
         clients can find the network — which is why beacon-based evil-twin and rogue-AP detection
-        (Day 17, Day 43) still matter even with MFP enabled.
+        (Lesson 17, Lesson 43) still matter even with MFP enabled.
       </div>
     </div>
   </div>
@@ -62,7 +62,7 @@
       </p>
       <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
         <li><strong>BIP-CMAC-128:</strong> AES-CMAC, the WPA2/WPA3 baseline.</li>
-        <li><strong>BIP-GMAC-256:</strong> AES-GMAC, used in WPA3-Enterprise 192-bit (Day 39).</li>
+        <li><strong>BIP-GMAC-256:</strong> AES-GMAC, used in WPA3-Enterprise 192-bit (Lesson 39).</li>
       </ul>
       <p>
         A replay counter in the MMIE also stops replayed broadcast management frames.
@@ -124,7 +124,7 @@
         <div style="font-size:36px;">➡️</div>
         <div>
           <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#f85149; margin-bottom:4px;">
-            Up Next · Day 43
+            Up Next · Lesson 43
           </div>
           <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
             Detecting Protocol-Level Attacks
