@@ -602,6 +602,7 @@ button { cursor: pointer; border: none; background: none; }
 }
 .code-block-wrapper code[class*="language-"] {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  color: #e6edf3;
 }
 
 /* Step callout */
