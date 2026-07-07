@@ -12,7 +12,7 @@
         Phase 1 · Radio Fundamentals
       </span>
     </div>
-    <h1>Radio Fundamentals<br>& Why Protocol Mastery Matters</h1>
+    <h1>Radio Fundamentals<br>& Why Protocol Matters</h1>
     <p>
       You've automated WLAN connections. But do you know WHY a device connects at -50 dBm
       but fails at -75 dBm? Why does 2.4 GHz interfere with Bluetooth? Why do some channels
@@ -115,9 +115,16 @@
       </pre>
       <p>
         <strong>EIRP (Effective Isotropic Radiated Power)</strong> is the actual power transmitted,
-        accounting for antenna gain. Most 802.11 devices are limited to 20 dBm (100 mW) in the USA
-        and Europe.
+        accounting for antenna gain: <code>EIRP = TxPower + AntennaGain − CableLoss</code>.
       </p>
+      <div class="callout">
+        <strong>Power limits are band- and region-specific — "20 dBm everywhere" is a myth.</strong><br>
+        In 2.4 GHz, most regions cap EIRP around 20 dBm (100 mW). But 5 GHz is far more generous:
+        U-NII-1/U-NII-3 allow up to <strong>30 dBm (1 W) EIRP</strong> in the US, and DFS bands
+        (U-NII-2) sit in between, often with transmit-power-control (TPC) requirements. Always check
+        the <em>regulatory domain</em> (country code) — it changes both the legal channels and the
+        power ceiling. We cover DFS/TPC (802.11h) later.
+      </div>
 
       <h3>Signal Strength: RSSI & Path Loss</h3>
       <p>
@@ -153,10 +160,39 @@ Example: 1 meter at 2.4 GHz = ~40 dB loss
           <tr><td>64-QAM (6 bits/symbol)</td><td>108–150 Mbps</td><td>Fragile</td><td>Short</td></tr>
         </tbody>
       </table>
-      <p>
-        <strong>Why the tradeoff?</strong> More bits per symbol = smaller spacing between signal states.
-        In a noisy environment, those states get confused. BPSK is robust; 64-QAM requires clean signal.
+      <p style="margin-top:8px; color:#57606a; font-size:13.5px;">
+        <em>Note:</em> the rates above assume a single spatial stream on a <strong>20 MHz</strong>
+        channel with an 800 ns guard interval. Widen the channel (40/80/160 MHz), add spatial streams,
+        or shorten the guard interval and the same modulation yields far higher rates — that's the
+        whole story of 802.11n/ac/ax, which we build up over the course.
       </p>
+      <p>
+        <strong>Why the tradeoff?</strong> More bits per symbol = smaller spacing between signal states
+        in the constellation. In a noisy environment (low SNR), those states get confused and bit
+        errors spike. BPSK is robust; 64-QAM (and later 256/1024-QAM) needs a clean, high-SNR signal.
+        This is why devices <strong>rate-adapt</strong>: they drop to a lower-order modulation as you
+        walk away from the AP.
+      </p>
+
+      <h3>SNR: The Number That Actually Decides Your Rate</h3>
+      <p>
+        RSSI alone doesn't determine speed — <strong>SNR (Signal-to-Noise Ratio)</strong> does.
+        <code>SNR (dB) = RSSI − NoiseFloor</code>. A typical noise floor is around −95 dBm, so
+        an RSSI of −70 dBm gives ~25 dB SNR. Each modulation needs a minimum SNR to decode reliably:
+      </p>
+      <table class="req-table" style="margin:16px 0;">
+        <thead>
+          <tr><th>Modulation</th><th>Approx. min SNR</th><th>Typical usable RSSI</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>BPSK</td><td>~5 dB</td><td>−90 dBm</td></tr>
+          <tr><td>QPSK</td><td>~10 dB</td><td>−85 dBm</td></tr>
+          <tr><td>16-QAM</td><td>~18 dB</td><td>−78 dBm</td></tr>
+          <tr><td>64-QAM</td><td>~25 dB</td><td>−70 dBm</td></tr>
+          <tr><td>256-QAM (11ac)</td><td>~30 dB</td><td>−65 dBm</td></tr>
+          <tr><td>1024-QAM (11ax)</td><td>~35 dB</td><td>−60 dBm</td></tr>
+        </tbody>
+      </table>
 
       <h3>Channels: Overlapping vs. Non-Overlapping</h3>
       <p>
@@ -230,6 +266,80 @@ Example: 1 meter at 2.4 GHz = ~40 dB loss
         Without protocol knowledge, you just say "move closer." With it, you diagnose the root cause.
       </p>
 
+    </div>
+  </div>
+
+  <!-- Code: link budget -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>Compute It: A Link-Budget Calculator</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Let's turn the theory into a tool. This calculator estimates free-space path loss, the
+        received signal, the resulting SNR, and the best modulation the link can sustain — the exact
+        reasoning a site-survey engineer does in their head.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">link_budget.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">import math
+
+def fspl_db(distance_m, freq_mhz):
+    """Free-space path loss in dB (distance in m, freq in MHz)."""
+    return 20*math.log10(distance_m) + 20*math.log10(freq_mhz) + 32.44
+
+def link_budget(tx_dbm, tx_gain, rx_gain, distance_m, freq_mhz,
+                noise_floor=-95):
+    loss = fspl_db(distance_m, freq_mhz)
+    rssi = tx_dbm + tx_gain + rx_gain - loss
+    snr  = rssi - noise_floor
+    # pick the densest modulation the SNR supports
+    tiers = [(35, "1024-QAM"), (30, "256-QAM"), (25, "64-QAM"),
+             (18, "16-QAM"),   (10, "QPSK"),    (5, "BPSK")]
+    mod = next((m for s, m in tiers if snr >= s), "no link")
+    return rssi, snr, mod
+
+for d in (1, 10, 50, 100):
+    rssi, snr, mod = link_budget(tx_dbm=20, tx_gain=3, rx_gain=2,
+                                 distance_m=d, freq_mhz=2437)  # ch 6
+    print(f"{d:4d} m  RSSI={rssi:6.1f} dBm  SNR={snr:5.1f} dB  -> {mod}")</code></pre>
+      </div>
+      <p style="margin-top:8px; color:#57606a; font-size:13.5px;">
+        Note: <code>32.44</code> is the FSPL constant when distance is in <strong>km</strong> and
+        frequency in MHz; using metres shifts the constant, so this simplified model is for
+        <em>relative</em> comparison, not regulatory-grade prediction. Real surveys add wall/obstacle
+        losses on top.
+      </p>
+    </div>
+  </div>
+
+  <!-- Exercise -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Build Your Intuition</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Run <code>link_budget.py</code> and find the distance at which your
+          link drops from 256-QAM to 64-QAM. Then re-run at 5 GHz (freq_mhz=5180) — how much does the
+          usable range shrink for the same power?</li>
+        <li><strong>Task 2:</strong> Your phone shows RSSI −72 dBm with a noise floor of −92 dBm. What
+          is the SNR, and which modulation (from the table above) is realistic? Would 256-QAM work?</li>
+        <li><strong>Task 3:</strong> An AP transmits at 23 dBm with a 5 dBi antenna and 2 dB of cable
+          loss. What is its EIRP? Is that legal on a 2.4 GHz channel in the US (≤ 36 dBm EIRP cap, but
+          note the conducted-power rules)?</li>
+      </ul>
+      <div class="hint-box">
+        <strong>Hint:</strong> SNR = RSSI − noise floor. For Task 2 that's −72 − (−92) = 20 dB, which
+        comfortably supports 16-QAM and marginally 64-QAM, but <em>not</em> the ~30 dB that 256-QAM
+        wants — so a device here would rate-adapt down.
+      </div>
     </div>
   </div>
 

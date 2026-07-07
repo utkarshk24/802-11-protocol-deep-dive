@@ -234,6 +234,90 @@ Frame body: 1500 bytes
     </div>
   </div>
 
+  <!-- L-SIG bit layout + decoder -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🧬</span>
+      <h2>Inside L-SIG: 24 Bits, Decoded</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The Legacy SIGNAL field is a single OFDM symbol carrying just 24 bits, always sent at 6 Mbps
+        (BPSK, 1/2) so every device can read it. Those 24 bits are the "contract" the receiver reads
+        before demodulating the rest of the frame:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">L-SIG Field (24 bits)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Bits  0-3   RATE      modulation+coding of the payload (4 bits)
+Bit   4     Reserved  always 0
+Bits  5-16  LENGTH    payload octets, 0-4095 (12 bits, LSB first)
+Bit   17    Parity    even parity over bits 0-16
+Bits 18-23  TAIL      six 0 bits to flush the convolutional decoder
+
+RATE encoding (4 bits):  1101=6  1111=9  0101=12  0111=18
+                         1001=24 1011=36 0001=48  0011=54  Mbps</code></pre>
+      </div>
+      <p>You can decode it straight from the raw bits:</p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">decode_lsig.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">RATE = {0b1101: 6, 0b1111: 9, 0b0101: 12, 0b0111: 18,
+        0b1001: 24, 0b1011: 36, 0b0001: 48, 0b0011: 54}
+
+def decode_lsig(bits24):
+    """bits24: list/str of 24 bits as transmitted (LSB-first fields)."""
+    b = [int(x) for x in bits24]
+    rate_field = (b[0] &lt;&lt; 3) | (b[1] &lt;&lt; 2) | (b[2] &lt;&lt; 1) | b[3]
+    length = sum(b[5 + i] &lt;&lt; i for i in range(12))   # LSB first
+    parity = b[17]
+    calc_parity = sum(b[0:17]) % 2
+    return {
+        "rate_mbps": RATE.get(rate_field, "reserved"),
+        "length": length,
+        "parity_ok": parity == calc_parity,
+    }
+
+# Example: RATE=1001 (24 Mbps), LENGTH=1500
+demo = "1001" + "0" + format(1500, "012b")[::-1]
+demo += "0" + "000000"                      # parity placeholder + tail
+print(decode_lsig(demo))</code></pre>
+      </div>
+      <div class="callout">
+        <strong>L-SIG is only the <em>legacy</em> header.</strong><br>
+        802.11n adds HT-SIG after L-SIG, 802.11ac adds VHT-SIG-A/B, and 802.11ax adds HE-SIG-A/B —
+        each carrying the richer parameters (MCS, streams, RU allocation) that L-SIG can't express.
+        The legacy L-SIG survives in all of them purely so old devices can set their NAV and defer.
+        We dissect VHT-SIG in Lesson 20 and HE-SIG in Lesson 29.
+      </div>
+    </div>
+  </div>
+
+  <!-- Exercise -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Read the Preamble</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Run <code>decode_lsig.py</code> and confirm it recovers 24 Mbps
+          and length 1500. Then flip one LENGTH bit — does the parity check catch it?</li>
+        <li><strong>Task 2:</strong> The L-STF is 8 µs and L-LTF is 8 µs in an 802.11a frame (2 × 4 µs
+          each), with L-SIG at 4 µs. What is the total legacy preamble duration, and why is it fixed
+          regardless of the payload rate?</li>
+        <li><strong>Task 3:</strong> In Wireshark, open a capture and compare the radiotap "Data Rate"
+          to the L-SIG RATE you'd expect. For an 802.11n frame, why might they differ (hint: HT-SIG)?</li>
+      </ul>
+    </div>
+  </div>
+
   <!-- What's Next -->
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">

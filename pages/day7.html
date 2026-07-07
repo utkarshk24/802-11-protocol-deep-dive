@@ -114,6 +114,31 @@ print(f"Error rate: {corrupted / (valid + corrupted) * 100:.2f}%")
     </div>
   </div>
 
+  <!-- Exercise -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Prove the CRC Works</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Take a known frame's bytes, compute the FCS, append it, and verify
+          that re-running CRC-32 over frame+FCS yields the standard residual. Then flip a single bit and
+          confirm the check fails.</li>
+        <li><strong>Task 2:</strong> In a real capture, count how many frames your card flagged as
+          <code>fcs_bad</code>. Correlate the FCS error rate with RSSI — do weak-signal frames fail more?</li>
+        <li><strong>Task 3:</strong> Explain in one sentence why CRC-32 detects accidental corruption
+          but provides zero protection against a deliberate attacker (foreshadowing the MIC in the
+          security phase).</li>
+      </ul>
+      <div class="hint-box">
+        <strong>Hint:</strong> CRC is linear and unkeyed — an attacker who changes the payload can
+        simply recompute a valid FCS. That's why encryption uses a keyed MIC (CCMP/GCMP) on top,
+        which we cover in Lessons 40–42.
+      </div>
+    </div>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

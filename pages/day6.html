@@ -244,6 +244,30 @@ for reason, cases in failures.items():
     </div>
   </div>
 
+  <!-- Exercise -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Build Your Own Parser</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Extend the frame reader to print a one-line summary per frame:
+          <code>time, type/subtype, RA, TA, rate, RSSI</code>. Use the DS bits from Lesson 4 to label
+          the addresses correctly.</li>
+        <li><strong>Task 2:</strong> Build a dictionary keyed by BSSID that counts how many management,
+          data, and control frames each AP sent. Which AP is busiest?</li>
+        <li><strong>Task 3:</strong> Combine the assoc-failure finder with a lookup of the client MAC's
+          vendor OUI (first 3 bytes). Are failures concentrated on one device vendor — a driver bug?</li>
+      </ul>
+      <div class="hint-box">
+        <strong>Hint:</strong> Scapy exposes <code>pkt.type</code>, <code>pkt.subtype</code>,
+        <code>pkt.addr1..addr4</code>, and radiotap fields via <code>pkt[RadioTap]</code>. Guard every
+        access with <code>haslayer()</code> — not every frame has a radiotap header or four addresses.
+      </div>
+    </div>
+  </div>
+
   <!-- What's Next -->
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">

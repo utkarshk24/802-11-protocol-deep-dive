@@ -20,7 +20,7 @@
       Wireshark capture.
     </p>
     <div class="day-hero-footer">
-      <div class="hero-stat"><span>⏱</span><span>~65 min</span></span></div>
+      <div class="hero-stat"><span>⏱</span><span>~65 min</span></div>
       <div class="hero-stat"><span>📊</span><span>Modulation schemes</span></div>
       <div class="hero-stat"><span>⚡</span><span>OFDM & subcarriers</span></div>
       <div class="hero-stat"><span>🧮</span><span>Data rate calculations</span></div>
@@ -277,6 +277,76 @@ Radiotap Header v0
         a lower data rate like 12 Mbps (MCS 1) because signal would be weaker.
       </p>
 
+    </div>
+  </div>
+
+  <!-- Code: rate calculator -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>Compute It: An OFDM Data-Rate Calculator</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        This reproduces the standard MCS rate tables from first principles, so you can verify any
+        published number and see exactly how bandwidth, modulation, coding, and guard interval combine.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">ofdm_rate.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python"># data subcarriers per channel width (802.11n/ac numbering)
+DATA_SC = {20: 52, 40: 108, 80: 234, 160: 468}
+# bits per subcarrier by modulation
+BPSCS = {"BPSK": 1, "QPSK": 2, "16-QAM": 4, "64-QAM": 6,
+         "256-QAM": 8, "1024-QAM": 10}
+
+def rate_mbps(modulation, coding, bw_mhz, nss=1, short_gi=False):
+    sc   = DATA_SC[bw_mhz]
+    bits = BPSCS[modulation] * coding * sc * nss
+    t_sym = 3.2e-6 + (0.4e-6 if short_gi else 0.8e-6)   # symbol + GI
+    return bits / t_sym / 1e6
+
+# 802.11n MCS 7: 64-QAM, 5/6 coding, 20 MHz, 1 stream, long GI
+print(f"MCS7  20MHz 1SS  = {rate_mbps('64-QAM', 5/6, 20):.1f} Mbps")   # ~65
+# 802.11ac MCS 9: 256-QAM 5/6, 80 MHz, 2 streams, short GI
+print(f"VHT9  80MHz 2SS  = {rate_mbps('256-QAM', 5/6, 80, 2, True):.1f} Mbps")  # ~867
+# 802.11ax 1024-QAM, 160 MHz, 2 streams, short GI
+print(f"HE11 160MHz 2SS  = {rate_mbps('1024-QAM', 5/6, 160, 2, True):.1f} Mbps")</code></pre>
+      </div>
+      <div class="callout">
+        <strong>Two ways to reach the same number.</strong><br>
+        Earlier we used <em>bits/symbol × subcarriers × 250,000 symbols/s</em>; here we divide by the
+        symbol <em>time</em> (3.2 µs + guard interval). They're identical — 1 ÷ 4 µs = 250,000. Learn
+        the time-based form; it generalizes cleanly to short guard intervals and 802.11ax's longer
+        symbols.
+      </div>
+    </div>
+  </div>
+
+  <!-- Exercise -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Master the Rate Table</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Use <code>ofdm_rate.py</code> to confirm the classic 802.11a/g
+          top rate of 54 Mbps (64-QAM, 3/4, 20 MHz, long GI). Which MCS is that?</li>
+        <li><strong>Task 2:</strong> How much does switching from long GI (800 ns) to short GI (400 ns)
+          increase throughput, as a percentage? Does it depend on the modulation?</li>
+        <li><strong>Task 3:</strong> Capture a frame in Wireshark, read its Data Rate and channel width
+          from the radiotap header, and back-solve the MCS. Does it match a low or high modulation —
+          i.e. is the client near or far?</li>
+      </ul>
+      <div class="hint-box">
+        <strong>Hint:</strong> Short GI shortens every symbol from 4.0 µs to 3.6 µs, a fixed
+        4.0/3.6 ≈ 11.1% gain regardless of modulation — which is why it's "free speed" when the
+        channel's delay spread is small enough to tolerate it.
+      </div>
     </div>
   </div>
 

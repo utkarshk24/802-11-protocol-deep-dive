@@ -154,6 +154,114 @@ if __name__ == "__main__":
     </div>
   </div>
 
+  <!-- Reference solution -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">✅</span>
+      <h2>Reference Solution (Check Your Work)</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Try the challenge yourself first. Then compare against this reference that fills in every TODO
+        — it pulls channel, RSSI, and rate from radiotap, tracks BSSIDs, and counts anomalies:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">pcap_analyzer_solution.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">#!/usr/bin/env python3
+from scapy.all import rdpcap, Dot11, Dot11Beacon, Dot11Deauth, \
+    Dot11Disas, RadioTap
+from collections import defaultdict, Counter
+import sys
+
+def rssi_bucket(dbm):
+    if dbm > -50:  return "> -50 dBm (strong)"
+    if dbm > -70:  return "-50 to -70 dBm (ok)"
+    return "< -70 dBm (weak)"
+
+def analyze_pcap(pcap_file):
+    packets = rdpcap(pcap_file)
+    types    = Counter()
+    channels = Counter()
+    rssi     = Counter()
+    rates    = Counter()
+    bssids   = defaultdict(int)
+    anomalies = Counter()
+    TYPE = {0: "Management", 1: "Control", 2: "Data"}
+
+    for pkt in packets:
+        if not pkt.haslayer(Dot11):
+            continue
+        types[TYPE.get(pkt.type, "Other")] += 1
+
+        rt = pkt.getlayer(RadioTap)
+        if rt is not None:
+            if getattr(rt, "Channel", None):
+                channels[rt.Channel] += 1
+            if getattr(rt, "dBm_AntSignal", None) is not None:
+                rssi[rssi_bucket(rt.dBm_AntSignal)] += 1
+            if getattr(rt, "Rate", None):
+                rates[f"{rt.Rate} Mbps"] += 1
+
+        if pkt.haslayer(Dot11Beacon):
+            bssids[pkt.addr3] += 1
+        if pkt.haslayer(Dot11Deauth):
+            anomalies["Deauthentications"] += 1
+        if pkt.haslayer(Dot11Disas):
+            anomalies["Disassociations"] += 1
+
+    n = len(packets)
+    print("=== PCAP Analysis Report ===")
+    print(f"File: {pcap_file} ({n} frames)\n")
+    print("Frame Summary:")
+    for t, c in types.most_common():
+        print(f"  {t}: {c} ({c/n*100:.1f}%)")
+    print("\nSignal Strength:")
+    for b, c in rssi.most_common():
+        print(f"  {b}: {c}")
+    print("\nTop BSSIDs (by beacons):")
+    for bssid, c in sorted(bssids.items(), key=lambda x: -x[1])[:5]:
+        print(f"  {bssid}: {c} beacons")
+    print("\nAnomalies:")
+    for a, c in anomalies.most_common():
+        print(f"  {a}: {c}")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        sys.exit("Usage: python pcap_analyzer_solution.py <pcap_file>")
+    analyze_pcap(sys.argv[1])</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stretch goals / rubric -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🏆</span>
+      <h2>Stretch Goals &amp; Self-Assessment</h2>
+    </div>
+    <div class="exercise-card-body">
+      <p>You've mastered Phase 1 if your analyzer can:</p>
+      <ul>
+        <li><strong>Correctly classify</strong> every frame by type/subtype (Lesson 4) and label
+          addresses using the DS bits.</li>
+        <li><strong>Extract PHY facts</strong> — channel, RSSI, and data rate — from radiotap
+          (Lessons 3 &amp; 5) and summarize them.</li>
+        <li><strong>Flag anomalies</strong> — deauths, disassocs, and FCS-bad frames (Lesson 7).</li>
+      </ul>
+      <p style="margin-top:12px;"><strong>Stretch goals to make it portfolio-grade:</strong></p>
+      <ul>
+        <li>Add a per-client connection timeline (probe → auth → assoc) and measure join latency.</li>
+        <li>Resolve vendor OUIs to identify device makers on the network.</li>
+        <li>Export the report as JSON <em>and</em> a matplotlib chart of the RSSI histogram.</li>
+        <li>Push it to GitHub with a README — this is your first 802.11 portfolio piece.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px; text-align:center;">
       <div style="font-size:48px; margin-bottom:16px;">🎓</div>

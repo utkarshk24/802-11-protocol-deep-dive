@@ -167,6 +167,74 @@ Diagnosis:
     </div>
   </div>
 
+  <!-- tshark CLI -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">💻</span>
+      <h2>Automate It: tshark on the Command Line</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The Wireshark GUI is for exploring; <code>tshark</code> (its CLI) is for scripting and
+        repeatable analysis. The same display filters work, and <code>-T fields -e</code> extracts
+        exactly the columns you want — perfect for feeding into other tools.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">bash</span>
+          <span class="code-block-filename">analyze.sh</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-bash"># List every beacon: BSSID, SSID, channel, signal
+tshark -r capture.pcap -Y "wlan.fc.type_subtype == 0x08" \
+  -T fields -e wlan.bssid -e wlan_mgt.ssid \
+  -e wlan_radio.channel -e wlan_radio.signal_dbm | sort -u
+
+# Count frames by type/subtype (what's dominating the air?)
+tshark -r capture.pcap -T fields -e wlan.fc.type_subtype \
+  | sort | uniq -c | sort -rn | head
+
+# Trace one client's connection sequence, with timestamps
+tshark -r capture.pcap \
+  -Y "wlan.addr == aa:bb:cc:dd:ee:ff &amp;&amp; wlan.fc.type == 0" \
+  -T fields -e frame.time_relative -e wlan.fc.type_subtype \
+  -e wlan.sa -e wlan.da
+
+# Find every deauth and its reason code (attack hunting)
+tshark -r capture.pcap -Y "wlan.fc.type_subtype == 0x0c" \
+  -T fields -e wlan.sa -e wlan.da -e wlan.fixed.reason_code
+
+# Live capture on a monitor-mode interface, ring buffer
+tshark -i wlan0mon -w live.pcap -b filesize:10240 -b files:5</code></pre>
+      </div>
+      <div class="hint-box">
+        <strong>Tip:</strong> <code>wlan.fc.type_subtype</code> is the single most useful field — it
+        combines type and subtype into one value (0x08 = beacon, 0x0b = auth, 0x00 = assoc req,
+        0x0c = deauth). Filtering on it is faster than writing separate type + subtype conditions.
+      </div>
+    </div>
+  </div>
+
+  <!-- Exercise -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Capture &amp; Investigate</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Capture 60 seconds of traffic in monitor mode. Use the
+          type/subtype histogram command — what fraction of frames are management vs data vs control?
+          (Control frames like ACKs usually dominate by count.)</li>
+        <li><strong>Task 2:</strong> Pick one BSSID and list every SSID/channel it advertises. Then
+          trace one client's full join sequence with timestamps and measure how long probe → associated
+          took.</li>
+        <li><strong>Task 3:</strong> Run the deauth command. Any deauths in your capture? What reason
+          codes appear, and are they from a real AP or a possible attacker?</li>
+      </ul>
+    </div>
+  </div>
+
   <!-- What's Next -->
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">

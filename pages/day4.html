@@ -177,6 +177,99 @@ BSSID          = (not used; 4th address field contains additional info)
     </div>
   </div>
 
+  <!-- Full MAC header -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📐</span>
+      <h2>The Complete MAC Header</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Frame Control is only the first 2 bytes. Here is the full MAC header of a data frame, field by
+        field. The address fields are variable — a frame carries 3 addresses normally, and a 4th only
+        in the AP-to-AP (WDS/mesh) case:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">802.11 Data Frame MAC Header</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Bytes  Field
+  2    Frame Control
+  2    Duration / ID
+  6    Address 1  (always present)
+  6    Address 2  (usually present)
+  6    Address 3  (usually present)
+  2    Sequence Control
+  6    Address 4  (only if ToDS=1 AND FromDS=1)
+  2    QoS Control    (only in QoS Data subtypes)
+  4    HT Control     (only if the Order/+HTC bit is set)
+ ...   Frame Body     (0 - 2304 bytes, or larger when aggregated)
+  4    FCS            (CRC-32 over the whole frame)</code></pre>
+      </div>
+
+      <h3>Duration / ID — the NAV engine</h3>
+      <p>
+        This 2-byte field usually holds a <strong>Duration</strong> in microseconds: how long the
+        medium will remain busy for this exchange (this frame + SIFS + ACK, etc.). Every other station
+        hears it and sets its <strong>NAV (Network Allocation Vector)</strong> — a countdown timer
+        during which it stays silent. This is the "virtual carrier sense" that makes CSMA/CA work
+        without everyone physically hearing everyone. (In PS-Poll frames the same bytes instead carry
+        the station's Association ID.)
+      </p>
+
+      <h3>Sequence Control — dedup &amp; fragments</h3>
+      <p>
+        12 bits of <strong>sequence number</strong> (0–4095, incrementing per MSDU) plus 4 bits of
+        <strong>fragment number</strong>. The receiver uses these to discard duplicate retransmissions
+        and to reassemble fragmented frames. As we saw in the security phase, a sequence number that
+        jumps or regresses for a known transmitter is a spoofing fingerprint.
+      </p>
+
+      <h3>QoS Control &amp; HT Control</h3>
+      <p>
+        <strong>QoS Control</strong> (present in QoS Data frames) carries the Traffic Identifier (TID
+        → access category: voice, video, best-effort, background), an EOSP bit, and A-MSDU present bit.
+        <strong>HT Control</strong> (present when the +HTC/Order bit is set) carries link-adaptation
+        feedback, MIMO power-save, and — in 802.11ax — the buffer-status and OFDMA control fields.
+      </p>
+    </div>
+  </div>
+
+  <!-- The 4-address table -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🧭</span>
+      <h2>The Canonical 4-Address Table</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        This one table is worth memorizing — it tells you exactly what Address 1–4 <em>mean</em> for
+        every combination of the To DS / From DS bits. RA/TA are always the radio-hop receiver and
+        transmitter (Addr1/Addr2); DA/SA are the ultimate endpoints:
+      </p>
+      <table class="req-table" style="margin: 16px 0;">
+        <thead>
+          <tr><th>ToDS</th><th>FromDS</th><th>Scenario</th><th>Addr1 (RA)</th><th>Addr2 (TA)</th><th>Addr3</th><th>Addr4</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>0</td><td>IBSS / control (ad-hoc)</td><td>DA</td><td>SA</td><td>BSSID</td><td>—</td></tr>
+          <tr><td>0</td><td>1</td><td>AP → client (from DS)</td><td>DA</td><td>BSSID</td><td>SA</td><td>—</td></tr>
+          <tr><td>1</td><td>0</td><td>Client → AP (to DS)</td><td>BSSID</td><td>SA</td><td>DA</td><td>—</td></tr>
+          <tr><td>1</td><td>1</td><td>AP → AP (WDS / mesh)</td><td>RA</td><td>TA</td><td>DA</td><td>SA</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <strong>Only the 4th case uses Address 4.</strong><br>
+        When both DS bits are set, the frame is being bridged between APs, so it needs to carry
+        <em>both</em> the radio hop (RA/TA = Addr1/Addr2) <em>and</em> both true endpoints (DA/SA =
+        Addr3/Addr4). Every other frame gets by with three addresses. This is exactly why the Address 4
+        field is "only present when ToDS=1 AND FromDS=1."
+      </div>
+    </div>
+  </div>
+
   <!-- Reading in Wireshark -->
   <div class="section-card">
     <div class="section-card-header">
@@ -221,6 +314,83 @@ Frame 42: 1234 bytes
         <li>TA = AP (radio transmitter)</li>
       </ul>
 
+    </div>
+  </div>
+
+  <!-- Code: decode frame control -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>Compute It: Decode Frame Control &amp; Addresses</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        This decodes the 2-byte Frame Control from raw bytes and then, given the DS bits, labels each
+        address using the table above — the exact logic Wireshark applies:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">decode_fc.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">TYPES = {0: "Management", 1: "Control", 2: "Data", 3: "Extension"}
+
+def decode_frame_control(fc_le):
+    """fc_le: the 2 Frame Control bytes as a little-endian int."""
+    ver     = fc_le & 0b11
+    ftype   = (fc_le >> 2) & 0b11
+    subtype = (fc_le >> 4) & 0b1111
+    flags = {
+        "to_ds":     (fc_le >> 8)  & 1,
+        "from_ds":   (fc_le >> 9)  & 1,
+        "more_frag": (fc_le >> 10) & 1,
+        "retry":     (fc_le >> 11) & 1,
+        "pwr_mgmt":  (fc_le >> 12) & 1,
+        "more_data": (fc_le >> 13) & 1,
+        "protected": (fc_le >> 14) & 1,
+        "order":     (fc_le >> 15) & 1,
+    }
+    return ver, TYPES[ftype], subtype, flags
+
+def label_addresses(to_ds, from_ds):
+    return {
+        (0, 0): ("DA", "SA", "BSSID", None),
+        (0, 1): ("DA", "BSSID", "SA", None),
+        (1, 0): ("BSSID", "SA", "DA", None),
+        (1, 1): ("RA", "TA", "DA", "SA"),
+    }[(to_ds, from_ds)]
+
+# Example: Frame Control 0x8841 (QoS Data, FromDS, Protected)
+ver, ftype, sub, flags = decode_frame_control(0x8841)
+print(ftype, "subtype", sub, flags)
+print("Addr1-4 =", label_addresses(flags["to_ds"], flags["from_ds"]))</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exercise -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Decode by Hand, Then by Code</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Frame Control <code>0x0841</code> — decode type, subtype, and DS
+          bits by hand, then check with <code>decode_fc.py</code>. Which direction is the frame going,
+          and which address is the BSSID?</li>
+        <li><strong>Task 2:</strong> You capture a frame with ToDS=1 and FromDS=1. How many address
+          fields does it carry, and what real-world topology produces it?</li>
+        <li><strong>Task 3:</strong> In a QoS Data frame, where is the TID, and how does it map to the
+          voice/video/best-effort/background access categories? (We'll use these in the channel-access
+          material.)</li>
+      </ul>
+      <div class="hint-box">
+        <strong>Hint:</strong> <code>0x0841</code> = ToDS=1, FromDS=0 → client-to-AP, so Addr1=BSSID
+        (the AP), Addr2=SA (the client), Addr3=DA (final destination). Only the ToDS=1/FromDS=1 case
+        adds Address 4.
+      </div>
     </div>
   </div>
 
