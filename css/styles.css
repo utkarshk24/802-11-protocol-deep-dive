@@ -730,6 +730,54 @@ button { cursor: pointer; border: none; background: none; }
 }
 .hint-box strong { color: #0d419d; }
 
+/* Knowledge-check quiz (native details/summary, no JS) */
+.knowledge-check {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-left: 4px solid #8957e5;
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin: 20px 0;
+  box-shadow: var(--card-shadow);
+}
+.kc-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2328;
+  margin-bottom: 12px;
+}
+.kc-item {
+  border-top: 1px solid var(--card-border);
+  padding: 10px 0 4px;
+}
+.kc-item summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #24292f;
+  font-size: 14px;
+  list-style: none;
+  padding-left: 22px;
+  position: relative;
+}
+.kc-item summary::-webkit-details-marker { display: none; }
+.kc-item summary::before {
+  content: '▸';
+  position: absolute;
+  left: 4px;
+  color: #8957e5;
+  transition: transform var(--transition);
+}
+.kc-item[open] summary::before { transform: rotate(90deg); }
+.kc-item p {
+  margin: 8px 0 6px 22px;
+  font-size: 13.5px;
+  color: #424a53;
+  line-height: 1.65;
+}
+
 /* LinkedIn post card */
 .linkedin-card {
   background: #f3f2ef;

@@ -115,6 +115,30 @@ for pkt in rdpcap("capture.pcap"):
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Decode a VHT Capabilities IE (ID 191) with the parser - what channel width and LDPC support?</li>
+        <li><strong>Task 2:</strong> Compare a phone's and an AP's VHT capabilities - what is the negotiated intersection?</li>
+        <li><strong>Task 3:</strong> Find a device that supports only MCS 0-7 on its streams (2-bit value 0).</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What are the two parts of the VHT Capabilities IE?</summary><p>A 4-byte Capabilities Info field and an 8-byte Supported VHT-MCS/NSS set.</p></details>
+    <details class="kc-item"><summary>How many bits per spatial stream in the MCS map?</summary><p>Two bits (values: MCS 0-7, 0-8, 0-9, or 'not supported').</p></details>
+    <details class="kc-item"><summary>The negotiated config is what of the two devices?</summary><p>The intersection/minimum: narrowest width, fewest streams, lowest max MCS.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

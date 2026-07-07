@@ -104,6 +104,30 @@ Auth (EAP-TLS)      certificates with >=3072-bit RSA or P-384</code></pre>
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> In a WPA3-Enterprise beacon RSN IE, identify the AKM and cipher suites.</li>
+        <li><strong>Task 2:</strong> Is GCMP-256 (192-bit) in use, or CCMP-128 (base)?</li>
+        <li><strong>Task 3:</strong> Check the EAP method - is it EAP-TLS with strong certificates?</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What pairwise cipher does WPA3-Enterprise 192-bit use?</summary><p>GCMP-256.</p></details>
+    <details class="kc-item"><summary>Why does '192-bit' mean consistency, not just a bigger key?</summary><p>Every primitive - cipher, hash, key exchange - meets a matched level, so there is no weak link.</p></details>
+    <details class="kc-item"><summary>What key-derivation hash does it use?</summary><p>HMAC-SHA-384.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

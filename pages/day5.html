@@ -236,6 +236,15 @@ tshark -i wlan0mon -w live.pcap -b filesize:10240 -b files:5</code></pre>
   </div>
 
   <!-- What's Next -->
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>Which single field best filters frames by kind?</summary><p>wlan.fc.type_subtype - it combines type and subtype into one value.</p></details>
+    <details class="kc-item"><summary>Where does Wireshark get Data Rate, RSSI, and channel?</summary><p>From the radiotap header added by the capturing radio.</p></details>
+    <details class="kc-item"><summary>What filter shows all deauthentication frames?</summary><p>wlan.fc.type_subtype == 0x0c.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

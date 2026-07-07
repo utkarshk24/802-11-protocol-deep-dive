@@ -351,6 +351,15 @@ print(f"HE11 160MHz 2SS  = {rate_mbps('1024-QAM', 5/6, 160, 2, True):.1f} Mbps")
   </div>
 
   <!-- What's Next -->
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>Same channel width and frequency - how do you get more speed?</summary><p>Use denser modulation (more bits per symbol) and/or less coding overhead; both need higher SNR.</p></details>
+    <details class="kc-item"><summary>What does OFDM do that a single carrier cannot?</summary><p>Splits the channel into many narrowband subcarriers that resist multipath, enabling high-order modulation.</p></details>
+    <details class="kc-item"><summary>Why is short guard interval roughly 11% 'free' speed?</summary><p>Symbol time drops from 4.0 to 3.6 microseconds - same bits in less time - safe only when delay spread is small.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

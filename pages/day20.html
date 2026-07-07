@@ -112,6 +112,30 @@ for pkt in rdpcap("vht_capture.pcap"):
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> In a VHT capture, read the radiotap MCS and bandwidth fields.</li>
+        <li><strong>Task 2:</strong> Find the legacy L-SIG inside a VHT frame - why is it still there?</li>
+        <li><strong>Task 3:</strong> Identify an MU-MIMO frame (Group ID 1-62) versus an SU frame (0 or 63).</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>Why keep the legacy preamble in a VHT frame?</summary><p>So 802.11a/n devices detect the frame and set their NAV (coexistence).</p></details>
+    <details class="kc-item"><summary>What does VHT-SIG-A carry?</summary><p>Bandwidth, STBC, Group ID, streams, coding, and MCS.</p></details>
+    <details class="kc-item"><summary>Why is VHT-SIG-B important for MU-MIMO?</summary><p>It carries each user's length and MCS so multiple clients decode their own part.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

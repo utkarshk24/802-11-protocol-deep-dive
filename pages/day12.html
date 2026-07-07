@@ -100,6 +100,15 @@ for pkt in rdpcap("capture.pcap"):
     </div>
   </div>
 
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What does the AP assign on a successful association?</summary><p>An Association ID (AID), in the range 1-2007.</p></details>
+    <details class="kc-item"><summary>What is the AID used for afterward?</summary><p>Indexing the station's bit in the TIM for power-save buffering.</p></details>
+    <details class="kc-item"><summary>How must a client's RSN IE relate to the AP's?</summary><p>It must be a subset - the chosen cipher/AKM has to be offered by the AP.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

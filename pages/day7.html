@@ -139,6 +139,15 @@ print(f"Error rate: {corrupted / (valid + corrupted) * 100:.2f}%")
     </div>
   </div>
 
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What CRC does the 802.11 FCS use?</summary><p>CRC-32 (4 bytes), polynomial 0x04C11DB7.</p></details>
+    <details class="kc-item"><summary>Why is CRC not a security mechanism?</summary><p>It is unkeyed and linear - an attacker can recompute a valid FCS after changing the data.</p></details>
+    <details class="kc-item"><summary>What causes the rate of FCS-bad frames to rise?</summary><p>Corruption from weak signal or interference (low SNR).</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

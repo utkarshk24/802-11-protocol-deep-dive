@@ -95,6 +95,30 @@ GCMP-256   AES    GMAC        256    WPA3-Enterprise 192-bit</code></pre>
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> In beacon RSN IEs around you, which still advertise TKIP? Flag them.</li>
+        <li><strong>Task 2:</strong> Identify CCMP versus GCMP in a capture.</li>
+        <li><strong>Task 3:</strong> Find an OWE (Enhanced Open) network - is there a Diffie-Hellman Parameter element?</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>Why is TKIP forbidden in WPA3?</summary><p>It is RC4-based and broken (Beck-Tews and related attacks).</p></details>
+    <details class="kc-item"><summary>CCMP vs GCMP authentication?</summary><p>CCMP uses CBC-MAC; GCMP uses GMAC, which is more parallelizable and faster.</p></details>
+    <details class="kc-item"><summary>What does OWE (Enhanced Open) protect against?</summary><p>Passive eavesdropping on open networks via per-client Diffie-Hellman keys - but not active MITM.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

@@ -114,6 +114,30 @@ Msg 4  STA -> AP    ACK + MIC
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Capture a full 4-way handshake and label EAPOL messages 1 through 4.</li>
+        <li><strong>Task 2:</strong> Find the Key Info bits and the replay counter in an EAPOL-Key frame.</li>
+        <li><strong>Task 3:</strong> Watch for a Group Key Handshake (2-way) after a device leaves.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What derives the PTK?</summary><p>PRF(PMK, ANonce, SNonce, AP MAC, STA MAC).</p></details>
+    <details class="kc-item"><summary>What does message 3 of the 4-way handshake carry?</summary><p>The GTK (encrypted with the KEK) plus a MIC.</p></details>
+    <details class="kc-item"><summary>What did KRACK exploit, and what is the fix?</summary><p>Key reinstallation via replaying msg 3 (nonce reuse); the fix is to never reinstall an in-use key.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

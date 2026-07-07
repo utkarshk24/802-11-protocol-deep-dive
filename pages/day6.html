@@ -269,6 +269,15 @@ for reason, cases in failures.items():
   </div>
 
   <!-- What's Next -->
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>How do you guard against frames that lack a layer in Scapy?</summary><p>Check pkt.haslayer(...) before accessing that layer's fields.</p></details>
+    <details class="kc-item"><summary>Which Scapy attributes give the four MAC addresses?</summary><p>pkt.addr1 through pkt.addr4.</p></details>
+    <details class="kc-item"><summary>How do you tell a beacon from a probe response in Scapy?</summary><p>haslayer(Dot11Beacon) vs haslayer(Dot11ProbeResp).</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

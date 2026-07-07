@@ -94,6 +94,30 @@
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Read the BSS Color from an HE-SIG-A (or the HE Operation element in beacons).</li>
+        <li><strong>Task 2:</strong> In a dense area, how many distinct BSS colors do you see? Any collisions?</li>
+        <li><strong>Task 3:</strong> Does your AP support or enable spatial reuse (OBSS_PD)?</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What is a BSS color?</summary><p>A 6-bit BSS identifier stamped in HE-SIG-A to distinguish intra-BSS from inter-BSS frames.</p></details>
+    <details class="kc-item"><summary>How does spatial reuse use it?</summary><p>Ignore weak inter-BSS (OBSS) frames below the OBSS_PD threshold and transmit anyway (with capped power).</p></details>
+    <details class="kc-item"><summary>How is a color collision fixed?</summary><p>The AP detects the duplicate color and changes it, like a channel switch.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

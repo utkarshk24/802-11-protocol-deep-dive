@@ -181,6 +181,15 @@ for pkt in rdpcap("capture.pcap"):
     </div>
   </div>
 
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>How does a station announce it is going to sleep?</summary><p>It sets the Power Management bit in Frame Control.</p></details>
+    <details class="kc-item"><summary>TIM vs DTIM?</summary><p>TIM signals per-AID buffered unicast; DTIM marks when buffered group/multicast is delivered.</p></details>
+    <details class="kc-item"><summary>PS-Poll vs U-APSD?</summary><p>PS-Poll fetches one frame per poll; U-APSD delivers a whole service period on a trigger.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

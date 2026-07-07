@@ -114,6 +114,30 @@ sniff(iface="wlan0mon", prn=handle, store=0)</code></pre>
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Run the WIDS on a live capture and tune the deauth threshold to avoid false positives.</li>
+        <li><strong>Task 2:</strong> Add an allowlist of your real BSSIDs and confirm rogue detection fires on an unknown one.</li>
+        <li><strong>Task 3:</strong> Track sequence numbers for one BSSID - do you ever see an anomalous jump?</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What is the signature of a deauth flood?</summary><p>A high rate of deauth frames from a BSSID within a short window.</p></details>
+    <details class="kc-item"><summary>How do sequence numbers reveal spoofing?</summary><p>A spoofer's counter differs, so a known MAC shows backward jumps or large leaps.</p></details>
+    <details class="kc-item"><summary>How do you detect an evil-twin/rogue AP?</summary><p>A known SSID appearing on an unexpected BSSID not in the allowlist.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

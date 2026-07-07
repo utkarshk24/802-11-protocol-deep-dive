@@ -131,6 +131,30 @@ for bw in (20, 80, 160):
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Use the calculator to reproduce the ~866 Mbps figure for 80 MHz, 2 streams, short GI.</li>
+        <li><strong>Task 2:</strong> How much does moving 80 -&gt; 160 MHz add for the same MCS and streams?</li>
+        <li><strong>Task 3:</strong> Back-solve the MCS of a captured frame from its data rate and channel width.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What are the components of the rate formula?</summary><p>(data subcarriers x bits-per-subcarrier x coding x streams) divided by symbol time.</p></details>
+    <details class="kc-item"><summary>How many data subcarriers does an 80 MHz channel have?</summary><p>234.</p></details>
+    <details class="kc-item"><summary>Short vs long guard-interval symbol times?</summary><p>3.2 microseconds (SGI) vs 3.6 microseconds (LGI), including the guard.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

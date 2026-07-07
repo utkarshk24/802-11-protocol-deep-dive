@@ -130,6 +130,15 @@ sniff(iface="wlan0mon", prn=handle, store=0)</code></pre>
     </div>
   </div>
 
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>Directed vs wildcard probe request?</summary><p>Directed names a specific SSID; wildcard uses a zero-length SSID meaning 'any AP'.</p></details>
+    <details class="kc-item"><summary>How do you detect a randomized (locally-administered) MAC?</summary><p>The locally-administered bit (0x02) is set in the first octet.</p></details>
+    <details class="kc-item"><summary>Why did MAC randomization matter?</summary><p>It broke passive device tracking that relied on probe SSIDs plus a fixed MAC.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

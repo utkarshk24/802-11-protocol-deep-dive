@@ -105,6 +105,30 @@ AP can serve, e.g.:  one 106 (fast client) + four 26 (IoT) in 20 MHz.</code></pr
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> For an 80 MHz channel, list the valid RU partitions from the tone plan.</li>
+        <li><strong>Task 2:</strong> How many 26-tone RUs fit in 40 MHz? Verify against the table.</li>
+        <li><strong>Task 3:</strong> Find an OFDMA frame and read how many users/RUs it served.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>Smallest and largest Resource Unit?</summary><p>26-tone up to 996-tone (2x996 for 160 MHz).</p></details>
+    <details class="kc-item"><summary>How many clients can an 80 MHz channel serve with 26-tone RUs?</summary><p>Up to about 37.</p></details>
+    <details class="kc-item"><summary>Who allocates RUs?</summary><p>The AP scheduler; uplink allocations are carried in a Trigger frame.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

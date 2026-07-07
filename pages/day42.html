@@ -118,6 +118,30 @@
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Check RSN Capabilities for the MFPC/MFPR bits - is MFP required?</li>
+        <li><strong>Task 2:</strong> In a WPA3 capture, are deauth/disassoc frames protected (encrypted/MIC)?</li>
+        <li><strong>Task 3:</strong> Trigger a reconnect and look for an SA Query exchange.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What frames does 802.11w protect?</summary><p>Robust management frames - deauth/disassoc and robust action frames.</p></details>
+    <details class="kc-item"><summary>Are beacons protected by MFP?</summary><p>No - discovery frames stay open, so evil-twin detection still matters.</p></details>
+    <details class="kc-item"><summary>What does the SA Query mechanism solve?</summary><p>Distinguishing a genuine reconnect from a spoofed (re)association under MFP.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

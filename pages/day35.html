@@ -113,6 +113,30 @@ for slot in range(5):
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Run the proportional-fair toy scheduler - how often does the slow client win an RU?</li>
+        <li><strong>Task 2:</strong> Switch the policy to max-throughput - what happens to the slow client?</li>
+        <li><strong>Task 3:</strong> In a real OFDMA capture, does one client dominate the RUs?</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>Name three scheduling fairness models.</summary><p>Max throughput, equal airtime, and proportional fair.</p></details>
+    <details class="kc-item"><summary>Why prefer airtime fairness over rate fairness?</summary><p>Slow clients no longer hog time and throttle everyone else.</p></details>
+    <details class="kc-item"><summary>Is the OFDMA scheduler standardized?</summary><p>No - the standard defines the mechanism (RUs/triggers); the policy is vendor-specific.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

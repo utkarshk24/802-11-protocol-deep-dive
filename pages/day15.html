@@ -112,6 +112,30 @@ for pkt in rdpcap("capture.pcap"):
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Filter action frames (subtype 13) and tally the categories present.</li>
+        <li><strong>Task 2:</strong> Find a Channel Switch Announcement (or force one via DFS) and read the target channel and count.</li>
+        <li><strong>Task 3:</strong> Look for 802.11k Neighbor Report action frames - does your AP send them?</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What two bytes begin every action frame?</summary><p>Category, then Action.</p></details>
+    <details class="kc-item"><summary>What typically triggers a Channel Switch Announcement?</summary><p>DFS radar detection forcing the AP to change channels.</p></details>
+    <details class="kc-item"><summary>What does an 802.11k Neighbor Report give a client?</summary><p>A curated list of roam candidates so it avoids scanning every channel.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

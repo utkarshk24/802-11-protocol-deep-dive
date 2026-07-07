@@ -130,6 +130,15 @@ sniff(iface="wlan0mon", prn=handle, store=0)</code></pre>
     </div>
   </div>
 
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What are the three 802.11 states?</summary><p>1: unauthenticated/unassociated, 2: authenticated/unassociated, 3: authenticated and associated.</p></details>
+    <details class="kc-item"><summary>What illegal event in State 1 signals an anomaly?</summary><p>A Class 3 (data) frame - likely spoofing; the AP replies with deauth reason 7.</p></details>
+    <details class="kc-item"><summary>What moves a station into State 3?</summary><p>A successful association response (status 0).</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

@@ -99,6 +99,30 @@ AP  -> ALL   Multi-STA Block Ack  (acknowledges A, B, C at once)</code></pre>
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Find a Trigger frame and read its per-user RU, MCS, and target-RSSI allocations.</li>
+        <li><strong>Task 2:</strong> Find the Multi-STA Block Ack that acknowledges an uplink MU transmission.</li>
+        <li><strong>Task 3:</strong> Check for an MU-EDCA Parameter Set element in beacons.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>What orchestrates an uplink multi-user transmission?</summary><p>The Trigger frame (per-user RU, MCS, and target RSSI).</p></details>
+    <details class="kc-item"><summary>Why the target-RSSI power control?</summary><p>So all uplink signals arrive at similar power for the AP to decode them together.</p></details>
+    <details class="kc-item"><summary>What does MU-EDCA do?</summary><p>Uses larger contention windows to nudge clients toward scheduled (trigger) access over random.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

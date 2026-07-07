@@ -96,6 +96,30 @@ UL-OFDMA:  AP --[Trigger: A->RU1, B->RU2, C->RU3]-->
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> In a capture, distinguish DL-OFDMA from UL-OFDMA (is a Trigger present?).</li>
+        <li><strong>Task 2:</strong> Identify a frame using both OFDMA and MU-MIMO (multiple users per RU).</li>
+        <li><strong>Task 3:</strong> For your traffic mix, would OFDMA or MU-MIMO help more? Justify it.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>OFDMA vs MU-MIMO - what axis does each split?</summary><p>OFDMA splits in frequency (RUs); MU-MIMO splits in space (streams/beams).</p></details>
+    <details class="kc-item"><summary>When is OFDMA better than MU-MIMO?</summary><p>OFDMA for many small packets; MU-MIMO for a few large, high-SNR flows.</p></details>
+    <details class="kc-item"><summary>Why is uplink OFDMA hard?</summary><p>Clients must transmit simultaneously aligned in time, frequency, and power - hence the Trigger frame.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

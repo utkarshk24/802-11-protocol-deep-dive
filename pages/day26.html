@@ -105,6 +105,30 @@ for pkt in rdpcap("capture.pcap"):
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Parse a VHT Operation IE (ID 192) - what width and center channel?</li>
+        <li><strong>Task 2:</strong> Compare the same AP's VHT Capabilities versus Operation - where do they differ?</li>
+        <li><strong>Task 3:</strong> Check whether neighboring APs align their primary channels.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>Capabilities IE vs Operation IE?</summary><p>Capabilities = what a device can do; Operation = what the BSS is currently doing.</p></details>
+    <details class="kc-item"><summary>How are legacy devices protected during VHT transmissions?</summary><p>L-SIG duration and RTS/CTS or CTS-to-self set their NAV.</p></details>
+    <details class="kc-item"><summary>What is the cost of that protection?</summary><p>Airtime overhead - mixed legacy/VHT networks run slower.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

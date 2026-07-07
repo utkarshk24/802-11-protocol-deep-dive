@@ -122,6 +122,30 @@ for pkt in rdpcap("capture.pcap"):
     </div>
   </div>
 
+
+  <!-- Exercise (auto) -->
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Try It Yourself</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Capture a WPA2 and a WPA3 join and identify the auth algorithm number in each (0 vs 3).</li>
+        <li><strong>Task 2:</strong> Count the auth frames in an SAE exchange - how many commit and confirm messages appear per side?</li>
+        <li><strong>Task 3:</strong> Force a wrong password and read the status code the AP returns in the auth/assoc response.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>Auth algorithm numbers for Open System and SAE?</summary><p>0 = Open System, 3 = SAE.</p></details>
+    <details class="kc-item"><summary>Why does capturing an SAE handshake not enable offline cracking?</summary><p>SAE is a PAKE; each guess needs a live exchange, so there is no offline dictionary attack.</p></details>
+    <details class="kc-item"><summary>What security does Open System authentication provide?</summary><p>None - it is a formality; real security comes later in the 4-way handshake.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">

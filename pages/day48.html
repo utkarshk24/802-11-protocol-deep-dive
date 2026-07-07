@@ -190,6 +190,15 @@ for n in (1, 8, 32, 64):
     </div>
   </div>
 
+
+  <!-- Knowledge Check (auto) -->
+  <div class="knowledge-check">
+    <div class="kc-title"><span>🧠</span> Knowledge Check</div>
+    <details class="kc-item"><summary>A-MSDU vs A-MPDU error handling?</summary><p>A-MSDU is all-or-nothing (one FCS); A-MPDU has a per-subframe FCS enabling selective retransmit.</p></details>
+    <details class="kc-item"><summary>What acknowledges an A-MPDU?</summary><p>A Block Ack carrying a per-subframe bitmap.</p></details>
+    <details class="kc-item"><summary>Why aggregate at all?</summary><p>To amortize fixed overhead (preamble, IFS, ACK) across much more data.</p></details>
+  </div>
+
   <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
     <div class="section-card-body" style="padding:24px;">
       <div style="display:flex; align-items:center; gap:14px;">
