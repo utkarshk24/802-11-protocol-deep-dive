@@ -92,5 +92,21 @@ const CURRICULUM = [
       { day: 44, title: "Building a Protocol Attack Detector",          file: "pages/day44.html", status: "available" },
       { day: 45, title: "Final Capstone: WPA3 Compliance Validator",    file: "pages/day45.html", status: "available", capstone: true },
     ]
+  },
+  {
+    phase: 6,
+    title: "Core MAC & Operations",
+    subtitle: "Lessons 46–52",
+    color: "#2dd4bf",
+    cssVar: "var(--phase6)",
+    days: [
+      { day: 46, title: "Channel Access: CSMA/CA, DCF & the NAV",       file: "pages/day46.html", status: "available" },
+      { day: 47, title: "QoS & EDCA: Access Categories, TXOP & WMM",     file: "pages/day47.html", status: "available" },
+      { day: 48, title: "Frame Aggregation & Block Ack",                 file: "pages/day48.html", status: "available" },
+      { day: 49, title: "Power Management: PS-Poll, TIM/DTIM & U-APSD",   file: "pages/day49.html", status: "available" },
+      { day: 50, title: "Smart Roaming: 802.11k & 802.11v",              file: "pages/day50.html", status: "available" },
+      { day: 51, title: "Regulatory, DFS & TPC (802.11h & 6 GHz AFC)",   file: "pages/day51.html", status: "available" },
+      { day: 52, title: "Enterprise Auth: 802.1X & EAP Methods",         file: "pages/day52.html", status: "available", capstone: true },
+    ]
   }
 ];

@@ -1,0 +1,238 @@
+<!-- Lesson 46: Channel Access — CSMA/CA, DCF & the NAV -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Lesson 46</span>
+      <span class="phase-badge" style="background:rgba(45,212,191,0.15); color:#2dd4bf; border:1px solid rgba(45,212,191,0.3);">
+        Phase 6 · Core MAC &amp; Operations
+      </span>
+    </div>
+    <h1>Channel Access:<br>CSMA/CA, DCF &amp; the NAV</h1>
+    <p>
+      Everything in Phases 3–4 — OFDMA, MU-EDCA, TXOPs — sits on top of one foundational mechanism:
+      how a station decides <em>when</em> it's allowed to transmit on a shared, half-duplex medium.
+      This is the MAC's beating heart, and it was never given a dedicated lesson. Today we fix that.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~70 min</span></div>
+      <div class="hero-stat"><span>📡</span><span>CSMA/CA &amp; DCF</span></div>
+      <div class="hero-stat"><span>⏱️</span><span>IFS &amp; backoff</span></div>
+      <div class="hero-stat"><span>🛡️</span><span>NAV &amp; RTS/CTS</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤔</span>
+      <h2>The 'Why' — You Can't Detect Collisions in the Air</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Wired Ethernet uses <strong>CSMA/CD</strong> (Collision <em>Detection</em>): a station transmits
+        and listens simultaneously, and if it hears a collision it stops. Radio can't do that — a Wi-Fi
+        radio is <strong>half-duplex</strong> and its own transmission is millions of times louder than
+        any incoming signal, so it's deaf while talking. It literally cannot hear a collision happen.
+      </p>
+      <p>
+        So 802.11 uses <strong>CSMA/CA</strong> (Collision <em>Avoidance</em>): stations work hard to
+        <em>avoid</em> transmitting at the same time in the first place, and confirm success with an
+        explicit ACK. No ACK = assume collision = retransmit.
+      </p>
+      <div class="callout">
+        <strong>Every frame is acknowledged (almost).</strong><br>
+        Because collisions can't be detected, the receiver sends an ACK after every successfully
+        received unicast frame (a SIFS later). Missing ACK is the <em>only</em> collision signal a
+        sender gets. Broadcast/multicast frames are <em>not</em> ACKed — which is why they're sent at
+        low, robust rates.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">⏱️</span>
+      <h2>DCF: Listen, Wait, Backoff, Transmit</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The <strong>Distributed Coordination Function (DCF)</strong> is the base access method. Before
+        transmitting, a station must sense the medium idle for a fixed <strong>interframe space</strong>,
+        then wait a <em>random</em> extra backoff. The interframe spaces create a priority hierarchy —
+        shorter wait = higher priority:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Interframe Spaces (IFS)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Name   Purpose                        5 GHz     2.4 GHz (HR/DSSS)
+SIFS   before ACK/CTS/response        16 us     10 us
+slot   backoff slot time              9 us      20 us (9 us if short slot)
+PIFS   PCF / point coordinator        SIFS+1slot
+DIFS   normal DCF access              SIFS+2slot = 34 us   50 us
+EIFS   after a bad/errored frame      SIFS + ACKtime + DIFS  (long)
+
+Shorter IFS = higher priority. SIFS is shortest, so ACKs and CTS
+always win the medium before any new DIFS-based transmission starts.</code></pre>
+      </div>
+
+      <h3>Random Backoff &amp; the Contention Window</h3>
+      <p>
+        If two stations both waited exactly DIFS they'd collide every time. So after DIFS, each picks a
+        random backoff = <code>random(0, CW) × slotTime</code> and counts down, but only while the
+        medium stays idle (the counter <em>freezes</em> when someone else transmits). The station whose
+        counter hits zero first transmits. On a collision (no ACK), the Contention Window
+        <strong>doubles</strong> — binary exponential backoff:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Binary Exponential Backoff</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">CWmin = 15, CWmax = 1023  (typical AC_BE, in slots)
+
+attempt 1: CW = 15    -> pick random(0..15)
+attempt 2: CW = 31    -> pick random(0..31)   (doubled after failure)
+attempt 3: CW = 63
+...
+capped at CWmax = 1023
+success  -> reset CW back to CWmin</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🛡️</span>
+      <h2>Virtual Carrier Sense: the NAV &amp; RTS/CTS</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Physical carrier sense isn't enough because of the <strong>hidden node problem</strong>: two
+        stations on opposite sides of an AP can't hear each other, so both think the medium is idle and
+        collide at the AP. The fix is <strong>virtual carrier sense</strong> using the
+        <strong>NAV (Network Allocation Vector)</strong>.
+      </p>
+      <p>
+        Every frame's <strong>Duration/ID</strong> field (Lesson 4) says how long the rest of the
+        exchange will take. Stations that hear it set their NAV — a countdown during which they treat
+        the medium as busy <em>even if they hear nothing</em>. The optional <strong>RTS/CTS</strong>
+        handshake reserves the medium explicitly:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">RTS/CTS Exchange</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">A -> AP   RTS   (Duration covers CTS+data+ACK)   everyone near A sets NAV
+AP -> A   CTS   (Duration covers data+ACK)        everyone near AP sets NAV
+A -> AP   DATA
+AP -> A   ACK
+
+Now even a hidden node C (hears AP but not A) saw the CTS,
+set its NAV, and stays silent -> no collision at the AP.</code></pre>
+      </div>
+      <div class="callout">
+        <strong>RTS/CTS costs airtime — it's a threshold.</strong><br>
+        The two extra control frames are pure overhead, so RTS/CTS only kicks in above a configurable
+        <em>RTS threshold</em> (frame size). Small frames skip it; large frames (where a collision
+        wastes more airtime) use it. In dense/hidden-node environments, lowering the threshold trades
+        raw throughput for fewer collisions.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>Compute It: A Backoff Simulator</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        This models two stations contending under DCF so you can watch collisions trigger CW doubling
+        and see why fairness emerges statistically:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">dcf_backoff.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">import random
+
+def contend(n_stations=2, rounds=10, cw_min=15, cw_max=1023):
+    cw = [cw_min] * n_stations
+    backoff = [random.randint(0, cw[i]) for i in range(n_stations)]
+    wins = [0] * n_stations
+
+    for r in range(rounds):
+        low = min(backoff)
+        winners = [i for i, b in enumerate(backoff) if b == low]
+
+        if len(winners) == 1:                 # clean transmission
+            w = winners[0]
+            wins[w] += 1
+            cw[w] = cw_min                     # reset on success
+            backoff[w] = random.randint(0, cw[w])
+            for i in range(n_stations):        # others decrement
+                if i != w:
+                    backoff[i] -= low
+        else:                                  # collision: >1 hit 0
+            for i in winners:
+                cw[i] = min(cw[i] * 2 + 1, cw_max)   # double CW
+                backoff[i] = random.randint(0, cw[i])
+            print(f"round {r}: COLLISION among {winners}, "
+                  f"new CW={[cw[i] for i in winners]}")
+    return wins
+
+print("wins per station:", contend())</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Feel the Contention</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Compute DIFS for 5 GHz (SIFS 16 µs, slot 9 µs). Now compute it for
+          legacy 2.4 GHz with long slot time (20 µs). Why does 2.4 GHz feel "slower" even at the same rate?</li>
+        <li><strong>Task 2:</strong> Run <code>dcf_backoff.py</code> with 2, then 10 stations. How does
+          the collision rate change as the network gets denser? This is exactly why OFDMA (Lesson 29)
+          was invented.</li>
+        <li><strong>Task 3:</strong> In a capture, filter for RTS/CTS frames. Read the Duration value in
+          an RTS and verify it covers CTS + data + ACK. Which stations would have set their NAV?</li>
+      </ul>
+      <div class="hint-box">
+        <strong>Hint:</strong> DIFS = SIFS + 2 × slot. 5 GHz: 16 + 18 = 34 µs. 2.4 GHz long slot:
+        10 + 40 = 50 µs. That extra fixed wait before <em>every</em> transmission is a big reason
+        2.4 GHz has lower real-world efficiency.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#2dd4bf; margin-bottom:4px;">
+            Up Next · Lesson 47
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            QoS &amp; EDCA: Access Categories, TXOP &amp; WMM
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            DCF treats all traffic equally — bad for voice and video. Next: how EDCA layers four
+            priority access categories on top of DCF, and how TXOPs let a station burst frames.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

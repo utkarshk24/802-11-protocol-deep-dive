@@ -8,7 +8,7 @@ const COURSE_START_DATE = '2026-04-01'; // YYYY-MM-DD, local time (all 45 days u
 function getAvailableDayCount() {
   const start   = new Date(COURSE_START_DATE + 'T00:00:00');
   const elapsed = Math.floor((Date.now() - start.getTime()) / 86400000);
-  return Math.min(45, Math.max(1, elapsed + 1));
+  return Math.min(52, Math.max(1, elapsed + 1));
 }
 
 function isDayAvailable(d) {
@@ -261,7 +261,7 @@ function initMobileSidebar() {
 
 // ---- Progress bar ------------------------------------------
 function updateProgress(dayNum) {
-  const total = 45;
+  const total = 52;
   const available = getAvailableDayCount();
   const pct = Math.max(2.5, (available / total) * 100);
   const fill = document.getElementById('progress-fill');

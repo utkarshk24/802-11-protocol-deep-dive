@@ -1,0 +1,187 @@
+<!-- Lesson 52: Enterprise Auth — 802.1X & EAP Methods -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Lesson 52</span>
+      <span class="phase-badge" style="background:rgba(45,212,191,0.15); color:#2dd4bf; border:1px solid rgba(45,212,191,0.3);">
+        Phase 6 · Core MAC &amp; Operations
+      </span>
+    </div>
+    <h1>Enterprise Auth:<br>802.1X &amp; EAP Methods</h1>
+    <p>
+      WPA3-Personal (Lesson 38) uses one shared password. Enterprises can't — they need per-user
+      credentials, central revocation, and audit trails. That's WPA-Enterprise, built on 802.1X and
+      EAP. Lesson 39 named it; here we finally open it up: the players, the port model, and the EAP
+      method zoo.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~65 min</span></div>
+      <div class="hero-stat"><span>🎫</span><span>802.1X port control</span></div>
+      <div class="hero-stat"><span>🔐</span><span>EAP methods</span></div>
+      <div class="hero-stat"><span>🖥️</span><span>RADIUS</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🎫</span>
+      <h2>The 802.1X Model: Three Players, One Port</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        802.1X is port-based network access control. Three roles:
+      </p>
+      <ul style="margin: 12px 0 0 20px; line-height: 1.8;">
+        <li><strong>Supplicant:</strong> the client device proving its identity.</li>
+        <li><strong>Authenticator:</strong> the AP (or switch) — it's just a gatekeeper that relays
+          messages and enforces the verdict.</li>
+        <li><strong>Authentication Server:</strong> the RADIUS server that actually validates
+          credentials against a directory (AD/LDAP) and decides yes/no.</li>
+      </ul>
+      <p>
+        The authenticator models the connection as two logical ports. The <strong>uncontrolled
+        port</strong> passes only EAP authentication traffic; the <strong>controlled port</strong>
+        (all real data) stays <em>blocked</em> until the RADIUS server says "authenticated." No valid
+        credentials, no network — not even an IP address.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">802.1X / EAP Flow</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Supplicant        Authenticator (AP)        RADIUS Server
+    |  EAPOL-Start        |                        |
+    |-------------------> |                        |
+    |  EAP-Request/ID     |                        |
+    | &lt;------------------ |                        |
+    |  EAP-Response/ID    |   RADIUS Access-Request |
+    |-------------------> |----------------------> |
+    |     ...EAP method exchange (tunneled)...      |
+    |                     |   RADIUS Access-Accept  |
+    |  EAP-Success        | &lt;---------------------- |
+    | &lt;------------------ |  (+ derived MSK)        |
+    |                     |                        |
+    |==== 4-way handshake using PMK-from-MSK ====   | (Lesson 41)
+    |  controlled port now OPEN -> data flows       |</code></pre>
+      </div>
+      <div class="callout">
+        <strong>EAP produces the key that seeds the 4-way handshake.</strong><br>
+        A successful EAP exchange derives a Master Session Key (MSK) known only to the supplicant and
+        RADIUS server. The server ships it to the AP, the top 256 bits become the PMK, and the normal
+        4-way handshake (Lesson 41) takes over. So enterprise auth <em>replaces</em> the PSK/SAE source
+        of the PMK — everything downstream is identical.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔐</span>
+      <h2>The EAP Method Zoo</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        EAP is a <em>framework</em>, not one protocol — the actual credential check is done by a chosen
+        EAP <strong>method</strong>. The big ones:
+      </p>
+      <table class="req-table" style="margin:16px 0;">
+        <thead>
+          <tr><th>Method</th><th>Client credential</th><th>Server cert?</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>EAP-TLS</strong></td><td>client certificate</td><td>yes</td><td>Strongest; mutual certs, no passwords. Needs PKI.</td></tr>
+          <tr><td><strong>PEAP (MSCHAPv2)</strong></td><td>username/password</td><td>yes</td><td>Password inside a TLS tunnel. Very common.</td></tr>
+          <tr><td><strong>EAP-TTLS</strong></td><td>password / legacy</td><td>yes</td><td>Like PEAP; flexible inner methods.</td></tr>
+          <tr><td><strong>EAP-FAST</strong></td><td>PAC / password</td><td>optional</td><td>Cisco; tunnel via a protected access credential.</td></tr>
+          <tr><td><strong>EAP-PWD</strong></td><td>password</td><td>no</td><td>Dragonfly-based; no cert infrastructure.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="border-left-color:#f85149;">
+        <strong>Validate the server certificate — or it's all theater.</strong><br>
+        PEAP/TTLS protect the password inside a TLS tunnel, but only if the client <em>verifies the
+        RADIUS server's certificate</em>. If a device is configured to "not validate," an attacker can
+        stand up a fake AP + fake RADIUS, present any cert, and harvest the MSCHAPv2 exchange for
+        offline cracking. EAP-TLS sidesteps this entirely — there's no password to steal.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🖥️</span>
+      <h2>Where Enterprise Auth Meets Everything Else</h2>
+    </div>
+    <div class="section-card-body">
+      <ul style="margin: 0 0 0 20px; line-height: 1.8;">
+        <li><strong>WPA3-Enterprise 192-bit (Lesson 39):</strong> mandates EAP-TLS with P-384 certs and
+          GCMP-256 — the no-passwords, uniform-192-bit configuration.</li>
+        <li><strong>Fast roaming (Lessons 13 &amp; 50):</strong> without 802.11r, every roam repeats the
+          <em>entire</em> EAP+RADIUS exchange (hundreds of ms). FT caches the key hierarchy so roams skip
+          RADIUS — the single biggest reason FT exists.</li>
+        <li><strong>MFP (Lesson 42):</strong> WPA3-Enterprise requires management frame protection, so
+          even enterprise networks resist the deauth attacks from Lesson 14.</li>
+      </ul>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">eap_type.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, EAP
+
+EAP_TYPES = {1: "Identity", 4: "MD5", 13: "EAP-TLS", 21: "EAP-TTLS",
+             25: "PEAP", 43: "EAP-FAST", 52: "EAP-PWD"}
+
+def audit_eap(pcap):
+    seen = {}
+    for pkt in rdpcap(pcap):
+        if pkt.haslayer(EAP):
+            t = pkt[EAP].type
+            seen[t] = seen.get(t, 0) + 1
+    for t, n in sorted(seen.items()):
+        print(f"{EAP_TYPES.get(t, f'type {t}'):12s}  {n} frames")
+    # flag weak/legacy negotiation
+    if 4 in seen:
+        print("WARNING: EAP-MD5 seen -> weak, no mutual auth")
+
+if __name__ == "__main__":
+    import sys
+    audit_eap(sys.argv[1])</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Dissect an Enterprise Join</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Capture a WPA-Enterprise connection. Identify the EAPOL-Start,
+          EAP-Request/Identity, and the method negotiation. Which EAP method did it settle on?</li>
+        <li><strong>Task 2:</strong> Run <code>eap_type.py</code>. Is the network using EAP-TLS
+          (certificate) or PEAP/TTLS (password-in-tunnel)? Any legacy MD5 to flag?</li>
+        <li><strong>Task 3:</strong> Confirm the handoff to the 4-way handshake: after EAP-Success, find
+          the EAPOL-Key messages (Lesson 41) and verify the controlled port opens only afterward.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#2dd4bf,#58a6ff); border-color:#2dd4bf;">
+    <div class="section-card-body" style="padding:32px; text-align:center;">
+      <div style="font-size:56px; margin-bottom:16px;">🧠</div>
+      <div style="font-size:24px; font-weight:700; color:#0d1117; margin-bottom:8px;">Phase 6 Complete</div>
+      <div style="font-size:14px; color:#0d1117; opacity:0.85; margin-bottom:20px;">Core MAC &amp; Operations Deep-Dives</div>
+      <div style="font-size:14px; color:#0d1117; opacity:0.9; line-height:1.9; max-width:560px; margin:0 auto;">
+        You've filled in the foundational MAC mechanics the main track glossed over: channel access
+        (CSMA/CA, DCF, NAV), QoS/EDCA, aggregation and Block Ack, power management, the k/v roaming
+        assists, regulatory/DFS rules, and enterprise 802.1X/EAP.
+        <br><br>
+        Combined with the 45-lesson core track, you now understand 802.11 from the RF up through the
+        PHY, the MAC, every major amendment, and the full security stack. That's the complete picture.
+      </div>
+    </div>
+  </div>
+</div>

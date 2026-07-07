@@ -1,0 +1,197 @@
+<!-- Lesson 50: Smart Roaming — 802.11k & 802.11v -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Lesson 50</span>
+      <span class="phase-badge" style="background:rgba(45,212,191,0.15); color:#2dd4bf; border:1px solid rgba(45,212,191,0.3);">
+        Phase 6 · Core MAC &amp; Operations
+      </span>
+    </div>
+    <h1>Smart Roaming:<br>802.11k &amp; 802.11v</h1>
+    <p>
+      Lesson 13 showed how 802.11r makes a roam <em>fast</em>. But a client still has to decide
+      <em>when</em> and <em>where</em> to roam — and left alone, clients are notoriously "sticky."
+      802.11k and 802.11v are the assistance mechanisms that turn dumb, blind roaming into an
+      informed, network-guided decision.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🗺️</span><span>802.11k neighbor reports</span></div>
+      <div class="hero-stat"><span>🧭</span><span>802.11v BTM</span></div>
+      <div class="hero-stat"><span>📞</span><span>Seamless voice</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤔</span>
+      <h2>The 'Why' — The Sticky-Client Problem</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The 802.11 standard leaves the roaming <em>decision</em> entirely to the client. Most clients
+        cling to their current AP until the signal is nearly unusable (say −80 dBm), even when a much
+        better AP is right overhead — because roaming means scanning every channel, which interrupts
+        traffic. The result: a client dragging a terrible link across a building, hurting itself and
+        everyone sharing that AP's airtime.
+      </p>
+      <div class="callout">
+        <strong>The network knows more than the client.</strong><br>
+        The infrastructure sees every AP's load, every neighbor's channel, and the whole RF topology.
+        802.11k lets it <em>share</em> that knowledge; 802.11v lets it <em>nudge</em> the client toward
+        a better AP. Together with 802.11r's fast handoff, they're the "k/v/r" trio behind seamless
+        enterprise roaming.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🗺️</span>
+      <h2>802.11k — Radio Resource Measurement</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        802.11k adds measurement exchanges (via the Radio Measurement action frames from Lesson 15).
+        The star feature is the <strong>Neighbor Report</strong>: instead of scanning all channels, the
+        client asks the AP "who are my roaming candidates?" and gets back a curated list of nearby APs
+        with their BSSIDs, channels, and capabilities.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Neighbor Report Exchange</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">STA -> AP   Neighbor Report Request
+AP  -> STA  Neighbor Report Response:
+              BSSID aa:bb:cc:00:11:23  channel 44  (same ESS)
+              BSSID aa:bb:cc:00:11:24  channel 149 (same ESS)
+              ... each with a BSSID Information field
+                  (reachability, security match, mobility domain, ...)
+
+Result: the client scans ONLY those 2 channels, not all ~25.
+Scan time drops from hundreds of ms to tens -> roams sooner, cleaner.</code></pre>
+      </div>
+      <p>
+        Other 802.11k measurements include the <strong>Beacon Report</strong> (the client reports what
+        APs it hears), <strong>Channel Load</strong>, and <strong>Noise Histogram</strong> — feeding the
+        controller's view of the RF environment.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🧭</span>
+      <h2>802.11v — BSS Transition Management</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Where 802.11k <em>informs</em>, 802.11v <em>steers</em>. Its key tool is <strong>BSS Transition
+        Management (BTM)</strong>: the AP can send a client a <strong>BTM Request</strong> suggesting it
+        move to a specific better AP, optionally with a "disassociation imminent" flag and a candidate
+        list (often the same neighbor list from 802.11k).
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">BTM Steering</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">STA -> AP   BTM Query        "where should I go?" (optional)
+AP  -> STA  BTM Request      "please move to BSSID X on ch 44"
+                             flags: disassoc-imminent, candidate list,
+                             preferred-candidate, validity timer
+STA -> AP   BTM Response     accept (status 0) or reject (with reason)
+
+If the client accepts, it roams (ideally via 802.11r for speed).
+If it ignores the request, the AP MAY disassociate to force a re-roam.</code></pre>
+      </div>
+      <div class="callout">
+        <strong>BTM is a request, not a command.</strong><br>
+        A client can decline a BTM request — the standard can't force a roam. Well-behaved clients
+        comply; poorly-behaved ones ignore it, which is why aggressive deployments pair BTM with a
+        disassociation as a last resort. This is the polite, standards-based alternative to the old
+        hack of deauthing sticky clients.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>Compute It: Score Roam Candidates</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Given a neighbor list and measured RSSIs, a simple roam-decision helper — the kind of logic a
+        client's driver runs, and that you can replicate to audit roaming behavior:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">roam_decision.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">def should_roam(current_rssi, candidates, hysteresis=8, floor=-75):
+    """candidates: list of (bssid, rssi). Roam only if a candidate is
+    meaningfully better AND current link is getting weak."""
+    if current_rssi &gt; floor:
+        return None                       # link is fine, stay put
+    best = max(candidates, key=lambda c: c[1], default=None)
+    if best and best[1] &gt;= current_rssi + hysteresis:
+        return best                       # roam to clearly-better AP
+    return None
+
+current = -78
+neighbors = [("aa:bb:cc:00:11:23", -60),   # much stronger
+             ("aa:bb:cc:00:11:24", -74)]
+target = should_roam(current, neighbors)
+print("roam ->", target if target else "stay")</code></pre>
+      </div>
+      <p style="margin-top:8px; color:#57606a; font-size:13.5px;">
+        The <strong>hysteresis</strong> margin prevents "ping-pong" roaming between two similar APs —
+        a candidate must be clearly better, not marginally, before the client commits.
+      </p>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Audit Your Roaming</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Capture while walking between two APs on the same SSID. Do you see
+          Neighbor Report or BTM action frames? Is your network actually using k/v?</li>
+        <li><strong>Task 2:</strong> Measure the RSSI at which your device finally roams. Is it "sticky"
+          (roaming only below −80 dBm)? Tune the <code>floor</code>/<code>hysteresis</code> in the code
+          to match its behavior.</li>
+        <li><strong>Task 3:</strong> Combine this with Lesson 13: trace a full roam and confirm the
+          order — BTM suggestion → scan (narrowed by 11k) → 11r fast transition → reassociation.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#2dd4bf; margin-bottom:4px;">
+            Up Next · Lesson 51
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Regulatory, DFS &amp; TPC (802.11h &amp; 6 GHz AFC)
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Roaming assumes you can legally use a channel. Next: regulatory domains, radar avoidance
+            (DFS), transmit-power control, and how 6 GHz's AFC coordinates standard-power operation.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

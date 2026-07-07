@@ -1,0 +1,205 @@
+<!-- Lesson 51: Regulatory, DFS & TPC — 802.11h & 6 GHz AFC -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Lesson 51</span>
+      <span class="phase-badge" style="background:rgba(45,212,191,0.15); color:#2dd4bf; border:1px solid rgba(45,212,191,0.3);">
+        Phase 6 · Core MAC &amp; Operations
+      </span>
+    </div>
+    <h1>Regulatory, DFS &amp; TPC<br><span style="font-size:0.6em;">802.11h &amp; 6 GHz AFC</span></h1>
+    <p>
+      Wi-Fi shares spectrum with radar, satellites, and licensed incumbents. Which channels you may use,
+      and at what power, is dictated by regulators — and the protocol has machinery (Country IE, DFS,
+      TPC, AFC) to enforce coexistence. Skip this and you'll misdiagnose half of all "why won't it use
+      that channel?" problems.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🌍</span><span>Regulatory domains</span></div>
+      <div class="hero-stat"><span>📡</span><span>DFS &amp; TPC (802.11h)</span></div>
+      <div class="hero-stat"><span>🛰️</span><span>6 GHz AFC</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🌍</span>
+      <h2>Regulatory Domains &amp; the Country IE</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Every region (FCC/US, ETSI/EU, MIC/Japan, …) defines which channels are legal and the maximum
+        power for each. An AP advertises its regulatory domain in the <strong>Country Information
+        Element</strong> in every beacon, so clients automatically obey local rules:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Country IE (Element ID 7)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Country String : "US" + environment byte
+Triplets (repeated):
+  First Channel = 36
+  Number of Channels = 4        -> channels 36,40,44,48
+  Max TX Power = 23 dBm
+
+  First Channel = 149
+  Number of Channels = 4        -> channels 149,153,157,161
+  Max TX Power = 30 dBm
+
+A client that hears this restricts itself accordingly. Devices without
+a country hint often fall back to a conservative "world" domain.</code></pre>
+      </div>
+      <div class="callout">
+        <strong>This is why the same AP shows different channels abroad.</strong><br>
+        Channels 12–13 (2.4 GHz) are legal in Europe but not the US; many 5 GHz channels differ too.
+        The Country IE + the device's own regulatory database intersect to decide the usable set. A
+        mismatch (e.g. a US client near an EU AP) is a common "can't see the network" cause.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📡</span>
+      <h2>802.11h: DFS &amp; TPC for 5 GHz Coexistence</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Large parts of the 5 GHz band (the U-NII-2 range) are shared with weather and military radar.
+        802.11h adds two mechanisms so Wi-Fi doesn't interfere:
+      </p>
+      <h3>DFS — Dynamic Frequency Selection</h3>
+      <ul style="margin: 8px 0 0 20px; line-height: 1.8;">
+        <li><strong>Channel Availability Check (CAC):</strong> before using a DFS channel, the AP must
+          listen for radar for a period (typically 60 s; up to 600 s on weather-radar channels). During
+          CAC it can't transmit — which is why DFS APs take a minute to come up.</li>
+        <li><strong>In-service monitoring:</strong> the AP keeps watching for radar. On detection it must
+          vacate within seconds, announcing the move with a <strong>Channel Switch Announcement</strong>
+          (Lesson 15) so clients follow instead of dropping.</li>
+        <li><strong>Non-Occupancy Period:</strong> a channel where radar was seen is off-limits for
+          ~30 minutes.</li>
+      </ul>
+      <h3>TPC — Transmit Power Control</h3>
+      <p>
+        Stations advertise their power capability and can be told to <em>reduce</em> transmit power to
+        the minimum needed for a good link, limiting interference to incumbents and neighbors. The Power
+        Constraint and TPC Report elements (Lesson 9) carry this.
+      </p>
+      <div class="callout">
+        <strong>DFS is the reason 160 MHz is hard (Lesson 24).</strong><br>
+        Contiguous 160 MHz channels almost always include DFS sub-channels, inheriting the CAC delay and
+        radar-eviction risk. Many client devices historically avoided DFS entirely — which is why "just
+        enable 160 MHz" so often disappoints in practice.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🛰️</span>
+      <h2>6 GHz: Power Classes &amp; AFC</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The 6 GHz band (Wi-Fi 6E/7) is shared with licensed fixed-link and satellite incumbents, so it
+        introduced a new coexistence model based on <strong>power classes</strong>:
+      </p>
+      <table class="req-table" style="margin:16px 0;">
+        <thead>
+          <tr><th>Class</th><th>Where</th><th>Power</th><th>Control</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>LPI</strong> (Low Power Indoor)</td><td>indoor only</td><td>low</td><td>no coordination; no external antenna</td></tr>
+          <tr><td><strong>VLP</strong> (Very Low Power)</td><td>indoor/outdoor</td><td>very low</td><td>portable devices, no coordination</td></tr>
+          <tr><td><strong>SP</strong> (Standard Power)</td><td>indoor/outdoor</td><td>high</td><td>requires <strong>AFC</strong></td></tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>AFC (Automated Frequency Coordination)</strong> is a cloud database an SP access point
+        must query with its geolocation. The AFC returns which 6 GHz channels and power levels are safe
+        at that location (protecting nearby incumbent fixed links). Only after that clearance can an SP
+        AP use high power outdoors — a fundamentally new, database-driven regulatory model for Wi-Fi.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>Compute It: Parse the Country IE</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">country_ie.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, Dot11Beacon, Dot11Elt
+
+def parse_country(info):
+    country = info[:2].decode(errors="ignore")
+    body = info[3:]                       # skip 2-char country + env byte
+    triplets = []
+    for i in range(0, len(body) - 2, 3):
+        first_ch, n_ch, max_pwr = body[i], body[i+1], body[i+2]
+        triplets.append((first_ch, n_ch, max_pwr))
+    return country, triplets
+
+for pkt in rdpcap("capture.pcap"):
+    if pkt.haslayer(Dot11Beacon):
+        elt = pkt.getlayer(Dot11Elt)
+        while elt:
+            if elt.ID == 7:                    # Country element
+                country, triplets = parse_country(bytes(elt.info))
+                print(f"Regulatory domain: {country}")
+                for first, n, pwr in triplets:
+                    chans = [first + 4*k for k in range(n)]
+                    print(f"  channels {chans}  max {pwr} dBm")
+                break
+            elt = elt.payload.getlayer(Dot11Elt)
+        break</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Map Your Spectrum</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Run <code>country_ie.py</code> on a beacon capture. What regulatory
+          domain and power limits is your AP advertising? Do they match your country?</li>
+        <li><strong>Task 2:</strong> Identify which of your 5 GHz channels are DFS. Reboot an AP onto a
+          DFS channel and time how long CAC takes before the SSID appears.</li>
+        <li><strong>Task 3:</strong> If you have 6 GHz gear, determine whether it's operating as LPI or
+          SP. If SP, is it querying an AFC service? What channels did the AFC grant?</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#2dd4bf; margin-bottom:4px;">
+            Up Next · Lesson 52
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Enterprise Auth: 802.1X &amp; EAP Methods
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            The finale of Phase 6: how WPA-Enterprise really authenticates users — 802.1X port control,
+            the supplicant/authenticator/RADIUS model, and the EAP method zoo (TLS, PEAP, TTLS).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

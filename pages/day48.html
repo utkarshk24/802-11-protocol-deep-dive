@@ -1,0 +1,212 @@
+<!-- Lesson 48: Frame Aggregation & Block Ack -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Lesson 48</span>
+      <span class="phase-badge" style="background:rgba(45,212,191,0.15); color:#2dd4bf; border:1px solid rgba(45,212,191,0.3);">
+        Phase 6 · Core MAC &amp; Operations
+      </span>
+    </div>
+    <h1>Frame Aggregation<br>&amp; Block Ack</h1>
+    <p>
+      At gigabit PHY rates, the fixed overhead per frame — preamble, IFS, backoff, ACK — dwarfs the
+      payload. Aggregation packs many payloads into one transmission, and Block Ack acknowledges them
+      all at once. Together they're why 802.11n+ throughput is anywhere near its PHY rate.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~60 min</span></div>
+      <div class="hero-stat"><span>📦</span><span>A-MSDU vs A-MPDU</span></div>
+      <div class="hero-stat"><span>✅</span><span>Block Ack</span></div>
+      <div class="hero-stat"><span>📈</span><span>Efficiency math</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🤔</span>
+      <h2>The 'Why' — Overhead Doesn't Scale With Rate</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        The PHY got 100× faster from 802.11b to 802.11ac, but SIFS, DIFS, backoff, and the preamble
+        barely changed. Sending a 1500-byte frame at 866 Mbps takes ~14 µs of data — but the
+        surrounding overhead (backoff + preamble + SIFS + ACK) is easily 100+ µs. At high rates you
+        spend most of your airtime <em>not</em> sending data.
+      </p>
+      <div class="callout">
+        <strong>The only fix is to send more data per "win."</strong><br>
+        You already saw TXOP bursting (Lesson 47). Aggregation goes further: combine many payloads into
+        a single PHY frame so the preamble and contention are paid <em>once</em> for kilobytes of data.
+        This is the single biggest MAC-efficiency lever in modern Wi-Fi.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📦</span>
+      <h2>Two Kinds of Aggregation</h2>
+    </div>
+    <div class="section-card-body">
+      <h3>A-MSDU — aggregate before the MAC header</h3>
+      <p>
+        Multiple MSDUs (the payloads handed down from the network layer) are packed into a
+        <em>single</em> MAC frame with one MAC header and one FCS. Maximally efficient, but fragile:
+        one bit error fails the whole aggregate's FCS and everything must be resent.
+      </p>
+      <h3>A-MPDU — aggregate whole MAC frames</h3>
+      <p>
+        Multiple complete MPDUs (each with its own MAC header and <strong>its own FCS</strong>) are
+        concatenated behind one PHY preamble, separated by MPDU delimiters. Slightly more overhead, but
+        each subframe is independently checkable — so a single corrupt subframe can be
+        <strong>selectively retransmitted</strong> while the rest are kept.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">A-MSDU vs A-MPDU</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">A-MSDU (one FCS for everything):
+  [PHY][MAC hdr][ MSDU1 | MSDU2 | MSDU3 ][FCS]
+        one error  ->  entire frame lost
+
+A-MPDU (per-subframe FCS):
+  [PHY][ delim|MPDU1|FCS ][ delim|MPDU2|FCS ][ delim|MPDU3|FCS ]
+        one error  ->  only that MPDU is retransmitted
+
+Real stacks often nest them: an A-MPDU of subframes,
+each subframe itself an A-MSDU. Best of both worlds.</code></pre>
+      </div>
+      <table class="req-table" style="margin:16px 0;">
+        <thead>
+          <tr><th></th><th>A-MSDU</th><th>A-MPDU</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Overhead</td><td>Lowest (1 header, 1 FCS)</td><td>Higher (per-subframe header+FCS)</td></tr>
+          <tr><td>Error handling</td><td>All-or-nothing</td><td>Selective retransmit</td></tr>
+          <tr><td>Max size (11n)</td><td>~7935 bytes</td><td>~64 KB</td></tr>
+          <tr><td>Max size (11ac)</td><td>~11454 bytes</td><td>~1 MB</td></tr>
+          <tr><td>Ack</td><td>normal ACK</td><td>Block Ack</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">✅</span>
+      <h2>Block Ack: One Ack for Many Frames</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        ACKing each of 64 subframes individually would destroy the efficiency gain. <strong>Block Ack
+        (BA)</strong> acknowledges a whole burst with a single frame carrying a <em>bitmap</em> — one
+        bit per subframe, so the sender learns exactly which MPDUs to resend.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Block Ack Session</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Setup once:   A -> AP  ADDBA Request  (agree buffer size, TID, policy)
+              AP -> A  ADDBA Response
+
+Per burst:    A -> AP  A-MPDU (MPDUs with sequence numbers 100..115)
+              AP -> A  Block Ack  (bitmap: 1=received, 0=missing)
+                        e.g. all 1s except seq 107 -> resend only 107
+
+Teardown:     DELBA when the stream ends
+BAR (Block Ack Request) can be sent to solicit a BA if one was lost.</code></pre>
+      </div>
+      <div class="callout">
+        <strong>Immediate vs delayed BA.</strong><br>
+        Almost all modern devices use <em>immediate</em> Block Ack (the BA comes a SIFS after the
+        A-MPDU). The BA's <strong>starting sequence number + bitmap</strong> is what enables the
+        selective retransmit that makes A-MPDU robust. The receiver keeps a reordering buffer so
+        out-of-order resent frames are delivered to the upper layer in order.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📈</span>
+      <h2>Compute It: Aggregation Efficiency</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">aggregation.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">PREAMBLE = 40      # us, HE-ish preamble
+BACKOFF  = 30      # us, avg
+SIFS     = 16
+ACK      = 32
+RATE     = 866e6   # bits/s
+
+def airtime_us(payload_bytes):
+    return payload_bytes * 8 / RATE * 1e6
+
+def efficiency(n_frames, payload=1500, aggregated=True):
+    data = airtime_us(payload) * n_frames
+    if aggregated:                       # one preamble + one Block Ack
+        overhead = BACKOFF + PREAMBLE + SIFS + ACK
+    else:                                # overhead PER frame
+        overhead = (BACKOFF + PREAMBLE + SIFS + ACK) * n_frames
+    total = data + overhead
+    return data / total * 100
+
+for n in (1, 8, 32, 64):
+    agg = efficiency(n, aggregated=True)
+    sep = efficiency(n, aggregated=False)
+    print(f"{n:3d} frames | aggregated {agg:5.1f}% | separate {sep:5.1f}%")</code></pre>
+      </div>
+      <p style="margin-top:8px; color:#57606a; font-size:13.5px;">
+        Run it: with 64 frames, aggregation pushes MAC efficiency from ~30% toward ~90%. That gap is
+        the difference between a PHY rate and real throughput (recall Lesson 27's capstone).
+      </p>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: See Aggregation in the Wild</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Run <code>aggregation.py</code>. At what frame count does aggregated
+          efficiency cross 80%? Why do tiny bursts barely help?</li>
+        <li><strong>Task 2:</strong> In a high-throughput capture, find an A-MPDU (Wireshark shows the
+          subframe count and per-subframe delimiters). How many MPDUs were aggregated, and were any
+          flagged as retransmissions?</li>
+        <li><strong>Task 3:</strong> Find a Block Ack frame and read its bitmap. Were all subframes
+          received, or did the sender have to resend specific sequence numbers?</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#2dd4bf; margin-bottom:4px;">
+            Up Next · Lesson 49
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Power Management: PS-Poll, TIM/DTIM &amp; U-APSD
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            We covered TWT (Lesson 32) for Wi-Fi 6, but skipped the classic power-save machinery every
+            device still uses. Next: how stations sleep and how the AP buffers frames for them.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,203 @@
+<!-- Lesson 49: Power Management — PS-Poll, TIM/DTIM & U-APSD -->
+<div class="day-content">
+  <div class="day-hero">
+    <div class="day-hero-meta">
+      <span class="day-number-badge">Lesson 49</span>
+      <span class="phase-badge" style="background:rgba(45,212,191,0.15); color:#2dd4bf; border:1px solid rgba(45,212,191,0.3);">
+        Phase 6 · Core MAC &amp; Operations
+      </span>
+    </div>
+    <h1>Power Management:<br>PS-Poll, TIM/DTIM &amp; U-APSD</h1>
+    <p>
+      Lesson 32 covered Target Wake Time, Wi-Fi 6's scheduled sleep. But every phone and laptop has
+      relied on the classic power-save machinery for two decades: doze between beacons, and let the AP
+      buffer your frames. Today we decode the TIM, DTIM, PS-Poll, and U-APSD.
+    </p>
+    <div class="day-hero-footer">
+      <div class="hero-stat"><span>⏱</span><span>~55 min</span></div>
+      <div class="hero-stat"><span>🔋</span><span>Doze vs awake</span></div>
+      <div class="hero-stat"><span>🗺️</span><span>TIM / DTIM</span></div>
+      <div class="hero-stat"><span>📞</span><span>U-APSD</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🔋</span>
+      <h2>The Core Idea: The AP Buffers for Sleepers</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        A station tells the AP "I'm going to sleep" by setting the <strong>Power Management</strong> bit
+        (Lesson 4) in a frame's Frame Control. From then on, the AP <em>buffers</em> any frames destined
+        for that station instead of transmitting them. The station's radio powers down (doze state) and
+        wakes only periodically to check whether anything is waiting.
+      </p>
+      <div class="callout">
+        <strong>Two states, one bit.</strong><br>
+        Awake = radio on, can transmit/receive anytime. Doze = radio mostly off, saving power. The
+        Power Management bit is how the station announces transitions. The AP maintains per-station
+        state and a buffer queue keyed by Association ID (Lesson 12).
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🗺️</span>
+      <h2>TIM &amp; DTIM: The Beacon's "You've Got Mail" Map</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        Every beacon (Lesson 9) carries a <strong>TIM (Traffic Indication Map)</strong> element — a
+        bitmap where each bit corresponds to an Association ID. If the AP has buffered unicast frames
+        for AID 7, it sets bit 7. A dozing station wakes at the beacon, checks <em>its</em> bit, and
+        only stays awake to retrieve data if the bit is set.
+      </p>
+      <p>
+        Broadcast and multicast frames can't be buffered per-station, so they use the <strong>DTIM
+        (Delivery TIM)</strong>. Every Nth beacon is a DTIM beacon (the <em>DTIM period</em>); the AP
+        sends all buffered group traffic right after it, and <em>all</em> power-save stations must be
+        awake for it:
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">TIM / DTIM Timeline (DTIM period = 3)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Beacon:   B    B    B(DTIM)  B    B    B(DTIM) ...
+count:    2    1    0        2    1    0
+                    ^ group/multicast delivered here
+
+- Unicast buffered: TIM bit for your AID set in ANY beacon
+- Group buffered:   delivered only after a DTIM beacon
+- Longer DTIM period = more sleep = more latency for multicast</code></pre>
+      </div>
+      <div class="callout">
+        <strong>DTIM period is a battery-vs-latency knob.</strong><br>
+        DTIM 1 wakes stations every beacon (responsive multicast, worse battery). DTIM 3 lets them sleep
+        through two beacons (better battery, more multicast delay). Misconfigured high DTIM values are a
+        classic cause of laggy multicast/mDNS discovery and choppy wireless casting.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">📥</span>
+      <h2>Retrieving Buffered Frames: PS-Poll vs U-APSD</h2>
+    </div>
+    <div class="section-card-body">
+      <p>
+        <strong>Legacy PS-Poll:</strong> when a station sees its TIM bit set, it sends a
+        <strong>PS-Poll</strong> control frame (which carries its AID in the Duration/ID field). The AP
+        replies with <em>one</em> buffered frame, setting the "More Data" bit if more remain — so the
+        station polls again. Simple, but one round-trip per frame is slow for voice.
+      </p>
+      <p>
+        <strong>U-APSD (Unscheduled Automatic Power Save Delivery / WMM Power Save):</strong> the
+        station sends any <em>trigger</em> frame (e.g. an uplink voice packet), and the AP responds by
+        delivering a whole <em>service period</em> of buffered frames at once. Far better for bidirectional
+        real-time traffic like VoIP — one trigger drains the queue.
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">text</span>
+          <span class="code-block-filename">Legacy PS-Poll vs U-APSD</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-text">Legacy PS-Poll (one frame per poll):
+  STA: wake -> see TIM bit -> PS-Poll -> get 1 frame (More Data=1)
+       -> PS-Poll -> get 1 frame ... repeat
+
+U-APSD (service period):
+  STA: send trigger (uplink voice) -> AP bursts ALL buffered
+       downlink frames -> last frame has EOSP=1 -> STA sleeps
+
+TWT (Lesson 32) is the Wi-Fi 6 evolution: scheduled, negotiated
+wake windows instead of "wake every beacon."</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <span class="section-icon">🐍</span>
+      <h2>Compute It: Read the TIM Element</h2>
+    </div>
+    <div class="section-card-body">
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <span class="code-block-filename">tim_parse.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-python">from scapy.all import rdpcap, Dot11Beacon, Dot11Elt
+
+def buffered_aids(tim_info):
+    """TIM element value: [DTIM count][DTIM period][bmp ctrl][bitmap...]"""
+    dtim_count  = tim_info[0]
+    dtim_period = tim_info[1]
+    bmp_ctrl    = tim_info[2]
+    offset      = (bmp_ctrl &amp; 0xFE)      # bitmap offset (even)
+    bitmap      = tim_info[3:]
+    aids = []
+    for byte_i, byte in enumerate(bitmap):
+        for bit in range(8):
+            if byte &amp; (1 &lt;&lt; bit):
+                aid = (offset + byte_i) * 8 + bit
+                aids.append(aid)
+    return dtim_count, dtim_period, aids
+
+for pkt in rdpcap("capture.pcap"):
+    if pkt.haslayer(Dot11Beacon):
+        elt = pkt.getlayer(Dot11Elt)
+        while elt:
+            if elt.ID == 5:                    # TIM element
+                c, p, aids = buffered_aids(bytes(elt.info))
+                print(f"DTIM count={c} period={p}  buffered AIDs={aids}")
+                break
+            elt = elt.payload.getlayer(Dot11Elt)
+        break</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise-card">
+    <div class="exercise-card-header">
+      <span style="font-size:20px">🧪</span>
+      <h2>Exercise: Watch Devices Sleep</h2>
+    </div>
+    <div class="exercise-card-body">
+      <ul>
+        <li><strong>Task 1:</strong> Run <code>tim_parse.py</code> on a beacon capture. What DTIM period
+          is your AP using? Which AIDs currently have buffered traffic?</li>
+        <li><strong>Task 2:</strong> Filter for PS-Poll frames (control subtype). Which stations are
+          using legacy power save, and how many polls does each need?</li>
+        <li><strong>Task 3:</strong> Watch the Power Management bit on one client's frames over time.
+          Can you see it transition between awake and doze, and does traffic pause while it dozes?</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-card" style="background: linear-gradient(135deg,#161b22,#1f2d3d); border-color:#30363d;">
+    <div class="section-card-body" style="padding:24px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:36px;">➡️</div>
+        <div>
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#2dd4bf; margin-bottom:4px;">
+            Up Next · Lesson 50
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#e6edf3; margin-bottom:6px;">
+            Smart Roaming: 802.11k &amp; 802.11v
+          </div>
+          <div style="font-size:13.5px; color:#8b949e;">
+            Lesson 13 covered 802.11r fast transition. Next: the other two of the roaming trio — 802.11k
+            neighbor reports and 802.11v BSS transition management — that tell a client where to go.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
